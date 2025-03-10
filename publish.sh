@@ -60,7 +60,8 @@ build_image() {
     # podman pull "$REMOTE_IMAGE_NAME:latest" || true
 
     echo "Building $IMAGE_NAME..."
-    podman build $IMAGE_DIR \
+    podman build \
+        -f "$IMAGE_DIR/Containerfile" ./build \
         --tag "$REMOTE_IMAGE_NAME:latest" \
         --build-arg REMOTE_IMAGE_NAME_PREFIX=$REMOTE_IMAGE_NAME_PREFIX
 

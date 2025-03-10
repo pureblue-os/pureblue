@@ -3,7 +3,7 @@ ARG REMOTE_IMAGE_NAME_PREFIX
 FROM ${REMOTE_IMAGE_NAME_PREFIX}-base:latest
 
 WORKDIR /tmp/pureblue-build
-COPY . .
+COPY ./asus .
 
 RUN ./setup.sh
 
