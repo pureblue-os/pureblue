@@ -1,6 +1,6 @@
 ARG REMOTE_IMAGE_NAME_PREFIX
 
-FROM ghcr.io/ublue-os/silverblue-nvidia:41-20250210
+FROM ghcr.io/ublue-os/silverblue-nvidia:41
 
 WORKDIR /tmp/pureblue-build
 COPY ./base .

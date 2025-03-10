@@ -5,7 +5,6 @@ FROM ${REMOTE_IMAGE_NAME_PREFIX}-base:latest
 WORKDIR /tmp/pureblue-build
 COPY ./asus .
 
-RUN ./kernel.sh
 RUN ./setup.sh
 
 RUN rm -rf /tmp/* /var/*
