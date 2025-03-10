@@ -6,6 +6,8 @@ echo "Setup Asus"
 set -x
 set -euxo pipefail
 
+FEDORA_VERSION=$(rpm -E %fedora)
+
 wget https://copr.fedorainfracloud.org/coprs/lukenukem/asus-linux/repo/fedora-${FEDORA_VERSION}/lukenukem-asus-linux-fedora-${FEDORA_VERSION}.repo -O /etc/yum.repos.d/_copr_lukenukem-asus-linux.repo
 
 # asusctl doesnt support with tuned-ppd at this time.
