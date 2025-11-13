@@ -12,4 +12,6 @@ bash /ctx/flatpaks.sh
 # Install pureblue-update script
 install -Dm755 /ctx/bin/pureblue-update /usr/bin/pureblue-update
 
+bash /ctx/tweaks.sh
+
 echo "==> Base variant build complete"
