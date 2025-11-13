@@ -174,9 +174,9 @@ for customization.
 This repository supports multiple Containerfile variants to support different
 hardware configurations:
 
-- `Containerfile.pureblue` - Base version without proprietary drivers
-- `Containerfile.pureblue-nvidia` - Includes NVIDIA proprietary drivers
-- `Containerfile.pureblue-nvidia-open` - Includes NVIDIA open-source drivers
+- `Containerfile.base` - Base version without proprietary drivers
+- `Containerfile.nvidia` - Includes NVIDIA proprietary drivers
+- `Containerfile.nvidia-open` - Includes NVIDIA open-source drivers
 
 Each Containerfile defines the operations used to customize the selected base
 image and works exactly like a regular podman Containerfile. For reference,
@@ -197,10 +197,10 @@ your custom OCI images and publishes them to the Github Container Registry
 (GHCR). The workflow uses a matrix strategy to build all three variants in
 parallel:
 
-- `pureblue` - Base image (published as `ghcr.io/<owner>/pureblue:latest`)
-- `pureblue-nvidia` - NVIDIA proprietary driver image (published as
+- `base` - Base image (published as `ghcr.io/<owner>/pureblue:latest`)
+- `nvidia` - NVIDIA proprietary driver image (published as
   `ghcr.io/<owner>/pureblue-nvidia:latest`)
-- `pureblue-nvidia-open` - NVIDIA open-source driver image (published as
+- `nvidia-open` - NVIDIA open-source driver image (published as
   `ghcr.io/<owner>/pureblue-nvidia-open:latest`)
 
 Each variant is built, tagged, signed, and pushed independently. There are
@@ -309,8 +309,8 @@ just build $variant $target_image $tag
 
 Arguments:
 
-- `$variant`: The containerfile variant to build (default: `pureblue`). Options:
-  `pureblue`, `pureblue-nvidia`, `pureblue-nvidia-open`
+- `$variant`: The containerfile variant to build (default: `base`). Options:
+  `base`, `nvidia`, `nvidia-open`
 - `$target_image`: The tag you want to apply to the image (default:
   `$image_name`).
 - `$tag`: The tag for the image (default: `$default_tag`).
@@ -319,13 +319,13 @@ Examples:
 
 ```bash
 # Build the base version
-just build pureblue localhost/pureblue latest
+just build base localhost/pureblue latest
 
 # Build the NVIDIA version
-just build pureblue-nvidia localhost/pureblue latest
+just build nvidia localhost/pureblue latest
 
 # Build the NVIDIA open-source driver version
-just build pureblue-nvidia-open localhost/pureblue latest
+just build nvidia-open localhost/pureblue latest
 ```
 
 ## Building and Running Virtual Machines and ISOs
@@ -348,7 +348,7 @@ Example:
 
 ```bash
 # Build QCOW2 with NVIDIA drivers
-just build-qcow2 pureblue-nvidia localhost/pureblue latest
+just build-qcow2 nvidia localhost/pureblue latest
 ```
 
 ### `just rebuild-qcow2`

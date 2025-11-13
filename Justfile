@@ -1,6 +1,6 @@
 export image_name := env("IMAGE_NAME", "pureblue") # output image name, usually same as repo name, change as needed
 export default_tag := env("DEFAULT_TAG", "latest")
-export default_variant := env("DEFAULT_VARIANT", "pureblue") # default variant: pureblue, pureblue-nvidia, pureblue-nvidia-open
+export default_variant := env("DEFAULT_VARIANT", "base") # default variant: base, nvidia, nvidia-open
 export bib_image := env("BIB_IMAGE", "quay.io/centos-bootc/bootc-image-builder:latest")
 
 alias build-vm := build-qcow2
@@ -73,7 +73,7 @@ sudoif command *args:
 #
 # Arguments:
 #   $variant - The containerfile variant to build (default: $default_variant).
-#              Options: pureblue, pureblue-nvidia, pureblue-nvidia-open
+#              Options: base, nvidia, nvidia-open
 #   $target_image - The tag you want to apply to the image (default: $image_name).
 #   $tag - The tag for the image (default: $default_tag).
 #
@@ -83,7 +83,7 @@ sudoif command *args:
 # just build $variant $target_image $tag
 #
 # Example usage:
-#   just build pureblue-nvidia pureblue latest
+#   just build nvidia pureblue latest
 #
 # This will build the nvidia variant of the image.
 #

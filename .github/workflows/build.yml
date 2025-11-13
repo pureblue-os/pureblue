@@ -33,9 +33,9 @@ jobs:
       fail-fast: false
       matrix:
         variant:
-          - pureblue
-          - pureblue-nvidia
-          - pureblue-nvidia-open
+          - base
+          - nvidia
+          - nvidia-open
 
     permissions:
       contents: read
@@ -49,7 +49,7 @@ jobs:
           echo "IMAGE_REGISTRY=${IMAGE_REGISTRY,,}" >> ${GITHUB_ENV}
           echo "IMAGE_NAME=${IMAGE_NAME,,}" >> ${GITHUB_ENV}
           # Set variant-specific image name
-          if [[ "${{ matrix.variant }}" == "pureblue" ]]; then
+          if [[ "${{ matrix.variant }}" == "base" ]]; then
             echo "VARIANT_IMAGE_NAME=${IMAGE_NAME,,}" >> ${GITHUB_ENV}
           else
             echo "VARIANT_IMAGE_NAME=${IMAGE_NAME,,}-${{ matrix.variant }}" >> ${GITHUB_ENV}
