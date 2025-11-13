@@ -11,6 +11,9 @@ echo "==> All system GNOME extensions removed"
 
 echo "==> Removing unwanted packages"
 
+# Remove LibreOffice
+dnf5 remove -y libreoffice*
+
 # Remove Input Remapper and Tweaks
 # dnf5 remove -y input-remapper gnome-tweaks
 
