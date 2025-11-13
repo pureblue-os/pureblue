@@ -1,0 +1,44 @@
+#!/usr/bin/bash
+# Pureblue system update script
+# Updates: rpm-ostree, flatpaks, and homebrew (if installed)
+
+set -euo pipefail
+
+echo "==> System Update"
+
+# Check if automatic updates are running
+if systemctl cat -- uupd.timer &> /dev/null; then
+    SERVICE="uupd.service"
+else
+    SERVICE="rpm-ostreed-automatic.service"
+fi
+
+if systemctl is-active --quiet "$SERVICE"; then
+    echo "ERROR: Automatic updates are currently running"
+    echo "Use 'journalctl -fexu $SERVICE' to see logs"
+    exit 1
+fi
+
+# Update rpm-ostree system
+echo "==> Updating system packages..."
+rpm-ostree upgrade
+
+# Update system flatpaks
+if flatpak remotes 2>/dev/null | grep -q system; then
+    echo "==> Updating system flatpaks..."
+    flatpak update -y
+fi
+
+# Update user flatpaks
+if flatpak remotes 2>/dev/null | grep -q user; then
+    echo "==> Updating user flatpaks..."
+    flatpak update --user -y
+fi
+
+# Update Homebrew (if user owns it)
+if [[ -O /var/home/linuxbrew/.linuxbrew/bin/brew ]] 2>/dev/null; then
+    echo "==> Updating Homebrew..."
+    /var/home/linuxbrew/.linuxbrew/bin/brew upgrade
+fi
+
+echo "==> Update complete! Reboot to apply system updates."
