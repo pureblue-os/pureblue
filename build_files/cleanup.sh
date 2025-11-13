@@ -18,3 +18,11 @@ dnf5 remove -y libreoffice*
 # dnf5 remove -y input-remapper gnome-tweaks
 
 echo "==> Unwanted packages removed"
+
+echo "==> Removing GNOME wallpapers"
+
+# Remove all GNOME wallpapers
+rm -rf /usr/share/backgrounds/gnome/*
+rm -rf /usr/share/gnome-background-properties/*
+
+echo "==> GNOME wallpapers removed"
