@@ -16,5 +16,6 @@ flatpak install --system -y flathub com.github.tchx84.Flatseal
 flatpak install --system -y flathub io.github.giantpinkrobots.flatsweep
 flatpak install --system -y flathub com.mattjakeman.ExtensionManager
 flatpak install --system -y flathub page.tesk.Refine
+flatpak install --system -y flathub org.onlyoffice.desktopeditors
 
 echo "==> System flatpaks installation complete"

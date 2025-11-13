@@ -8,7 +8,7 @@ echo "==> Customizing Pureblue"
 # dnf5 remove -y <package>
 
 # Install your custom packages here
-dnf5 install -y tmux
+dnf5 install -y tmux waydroid
 
 # Enable system services
 systemctl enable podman.socket
