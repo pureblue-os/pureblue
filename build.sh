@@ -5,7 +5,7 @@ set -euo pipefail
 # Arguments
 BASE_IMAGE=${1:-ghcr.io/pureblue-os/gnome:latest}
 FINAL_TAG=${2:-localhost/pureblue:latest}
-TEMP_TAG="pureblue:building-$$"
+TEMP_TAG="localhost/pureblue:building-$$"
 
 echo "==> Building container from $BASE_IMAGE to $FINAL_TAG"
 
