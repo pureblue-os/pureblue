@@ -1,14 +1,8 @@
 ARG BASE_IMAGE
-
 FROM ${BASE_IMAGE}
 
-# Remove GNOME wallpapers
 RUN rm -rf /usr/share/backgrounds/gnome/* && \
     rm -rf /usr/share/gnome-background-properties/*
 
-# Install pureblue-update script
 COPY build_files/bin/pureblue-update /usr/bin/pureblue-update
-RUN chmod +x /usr/bin/pureblue-update
-
-# Create desktop entry for pureblue-update
 COPY build_files/pureblue-update.desktop /usr/share/applications/pureblue-update.desktop
