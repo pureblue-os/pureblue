@@ -1,11 +1,13 @@
 ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
-RUN flatpak remote-add --if-not-exists --system flathub https://flathub.org/repo/flathub.flatpakrepo
+RUN flatpak remote-add --if-not-exists --system flathub https://flathub.org/repo/flathub.flatpakrepo && \
+    rm -rf /var/lib/flatpak/repo/tmp/cache/* /var/tmp/flatpak-cache-* /root/.local/share/flatpak/repo/tmp/cache/*
 
 RUN curl -L -o /tmp/purebazaar.flatpak https://github.com/pureblue-os/purebazaar/releases/download/v0.5.11.pure.20251114/Bazaar.flatpak && \
     flatpak install --system -y --bundle /tmp/purebazaar.flatpak && \
-    rm -f /tmp/purebazaar.flatpak
+    rm -f /tmp/purebazaar.flatpak && \
+    rm -rf /var/lib/flatpak/repo/tmp/cache/* /var/tmp/flatpak-cache-* /root/.local/share/flatpak/repo/tmp/cache/*
 
 RUN flatpak install --system -y flathub com.usebottles.bottles && \
     rm -rf /var/lib/flatpak/repo/tmp/cache/* /var/tmp/flatpak-cache-* /root/.local/share/flatpak/repo/tmp/cache/*
