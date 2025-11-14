@@ -20,3 +20,8 @@ RUN flatpak install --system -y flathub io.github.giantpinkrobots.flatsweep
 RUN flatpak install --system -y flathub com.mattjakeman.ExtensionManager
 RUN flatpak install --system -y flathub page.tesk.Refine
 RUN flatpak install --system -y flathub org.onlyoffice.desktopeditors
+
+# Clean up flatpak cache to prevent ostree hardlink issues
+RUN rm -rf /var/lib/flatpak/repo/tmp/cache/* && \
+    rm -rf /var/tmp/flatpak-cache-* && \
+    rm -rf /root/.local/share/flatpak/repo/tmp/cache/*
