@@ -1,0 +1,6 @@
+ARG BASE_IMAGE
+
+FROM ${BASE_IMAGE}
+
+# Run bootc container lint
+RUN bootc container lint

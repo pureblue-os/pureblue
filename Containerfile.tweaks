@@ -1,0 +1,23 @@
+ARG BASE_IMAGE
+
+FROM ${BASE_IMAGE}
+
+# Remove GNOME wallpapers
+RUN rm -rf /usr/share/backgrounds/gnome/* && \
+    rm -rf /usr/share/gnome-background-properties/*
+
+# Install pureblue-update script
+COPY build_files/bin/pureblue-update /usr/bin/pureblue-update
+RUN chmod +x /usr/bin/pureblue-update
+
+# Create desktop entry for pureblue-update
+RUN cat > /usr/share/applications/pureblue-update.desktop <<'EOF'
+[Desktop Entry]
+Type=Application
+Name=System Update
+Comment=Update system, Flatpaks, Distrobox containers, and more
+Icon=software-update-available
+Categories=System;Utility;
+Terminal=true
+Exec=/usr/bin/pureblue-update
+EOF

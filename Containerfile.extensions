@@ -1,0 +1,9 @@
+ARG BASE_IMAGE
+
+FROM ${BASE_IMAGE}
+
+# Remove all system extensions first
+RUN rm -rf /usr/share/gnome-shell/extensions/*
+
+# Install desired extensions
+RUN dnf5 install -y gnome-shell-extension-appindicator gnome-shell-extension-gsconnect

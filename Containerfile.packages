@@ -1,0 +1,10 @@
+ARG BASE_IMAGE
+
+FROM ${BASE_IMAGE}
+
+# Remove unwanted packages
+RUN dnf5 remove -y libreoffice*
+
+# Install desired packages
+RUN dnf5 install -y tmux waydroid && \
+    systemctl enable podman.socket

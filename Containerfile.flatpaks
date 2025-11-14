@@ -1,0 +1,22 @@
+ARG BASE_IMAGE
+
+FROM ${BASE_IMAGE}
+
+# Add Flathub repository
+RUN flatpak remote-add --if-not-exists --system flathub https://flathub.org/repo/flathub.flatpakrepo
+
+# Download and install purebazaar flatpak
+RUN curl -L -o /tmp/purebazaar.flatpak https://github.com/pureblue-os/purebazaar/releases/download/v0.5.11.pure.20251114/Bazaar.flatpak && \
+    flatpak install --system -y --bundle /tmp/purebazaar.flatpak && \
+    rm -f /tmp/purebazaar.flatpak
+
+# Install system flatpaks (each RUN = one layer)
+RUN flatpak install --system -y flathub com.usebottles.bottles
+RUN flatpak install --system -y flathub io.github.dvlv.boxbuddyrs
+RUN flatpak install --system -y flathub it.mijorus.gearlever
+RUN flatpak install --system -y flathub io.github.flattool.Ignition
+RUN flatpak install --system -y flathub com.github.tchx84.Flatseal
+RUN flatpak install --system -y flathub io.github.giantpinkrobots.flatsweep
+RUN flatpak install --system -y flathub com.mattjakeman.ExtensionManager
+RUN flatpak install --system -y flathub page.tesk.Refine
+RUN flatpak install --system -y flathub org.onlyoffice.desktopeditors

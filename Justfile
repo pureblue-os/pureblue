@@ -91,18 +91,9 @@ sudoif command *args:
 # Build the image using the specified parameters
 build $variant=default_variant $target_image=image_name $tag=default_tag:
     #!/usr/bin/env bash
-
-    BUILD_ARGS=()
-    if [[ -z "$(git status -s)" ]]; then
-        BUILD_ARGS+=("--build-arg" "SHA_HEAD_SHORT=$(git rev-parse --short HEAD)")
-    fi
-
-    podman build \
-        "${BUILD_ARGS[@]}" \
-        --pull=newer \
-        --tag "${target_image}:${tag}" \
-        --file "Containerfile.${variant}" \
-        .
+    set -euo pipefail
+    
+    bash "build-${variant}.sh" "${target_image}:${tag}"
 
 # Command: _rootful_load_image
 # Description: This script checks if the current user is root or running under sudo. If not, it attempts to resolve the image tag using podman inspect.
