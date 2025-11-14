@@ -123,11 +123,11 @@ jobs:
         id: build_image
         run: |
           # Run variant-specific build script
-          bash "build-${{ matrix.variant }}.sh" "${{ env.VARIANT_IMAGE_NAME }}:${{ env.DEFAULT_TAG }}"
+          bash "build-${{ matrix.variant }}.sh" "${{ env.IMAGE_REGISTRY }}/${{ env.VARIANT_IMAGE_NAME }}:${{ env.DEFAULT_TAG }}"
 
           # Apply metadata tags
           for tag in ${{ steps.metadata.outputs.tags }}; do
-            podman tag "${{ env.VARIANT_IMAGE_NAME }}:${{ env.DEFAULT_TAG }}" "$tag"
+            podman tag "${{ env.IMAGE_REGISTRY }}/${{ env.VARIANT_IMAGE_NAME }}:${{ env.DEFAULT_TAG }}" "$tag"
           done
 
       # Rechunk is a script that we use on Universal Blue to make sure there isnt a single huge layer when your image gets published.
