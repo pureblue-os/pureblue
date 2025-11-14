@@ -11,7 +11,7 @@ echo "==> Building container from $BASE_IMAGE to $FINAL_TAG"
 
 # Build each layer incrementally
 echo "==> Building flatpaks layer"
-podman build --build-arg BASE_IMAGE="$TEMP_TAG" -f Containerfile.flatpaks -t "$TEMP_TAG" .
+podman build --build-arg BASE_IMAGE="$BASE_IMAGE" -f Containerfile.flatpaks -t "$TEMP_TAG" .
 
 echo "==> Building packages layer"
 podman build --build-arg BASE_IMAGE="$TEMP_TAG" -f Containerfile.packages -t "$TEMP_TAG" .
