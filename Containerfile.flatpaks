@@ -11,17 +11,21 @@ RUN curl -L -o /tmp/purebazaar.flatpak https://github.com/pureblue-os/purebazaar
     rm -f /tmp/purebazaar.flatpak
 
 # Install system flatpaks (each RUN = one layer)
-RUN flatpak install --system -y flathub com.usebottles.bottles
-RUN flatpak install --system -y flathub io.github.dvlv.boxbuddyrs
-RUN flatpak install --system -y flathub it.mijorus.gearlever
-RUN flatpak install --system -y flathub io.github.flattool.Ignition
-RUN flatpak install --system -y flathub com.github.tchx84.Flatseal
-RUN flatpak install --system -y flathub io.github.giantpinkrobots.flatsweep
-RUN flatpak install --system -y flathub com.mattjakeman.ExtensionManager
-RUN flatpak install --system -y flathub page.tesk.Refine
-RUN flatpak install --system -y flathub org.onlyoffice.desktopeditors
-
-# Clean up flatpak cache to prevent ostree hardlink issues
-RUN rm -rf /var/lib/flatpak/repo/tmp/cache/* && \
-    rm -rf /var/tmp/flatpak-cache-* && \
-    rm -rf /root/.local/share/flatpak/repo/tmp/cache/*
+RUN flatpak install --system -y flathub com.usebottles.bottles && \
+    rm -rf /var/lib/flatpak/repo/tmp/cache/* /var/tmp/flatpak-cache-* /root/.local/share/flatpak/repo/tmp/cache/*
+RUN flatpak install --system -y flathub io.github.dvlv.boxbuddyrs && \
+    rm -rf /var/lib/flatpak/repo/tmp/cache/* /var/tmp/flatpak-cache-* /root/.local/share/flatpak/repo/tmp/cache/*
+RUN flatpak install --system -y flathub it.mijorus.gearlever && \
+    rm -rf /var/lib/flatpak/repo/tmp/cache/* /var/tmp/flatpak-cache-* /root/.local/share/flatpak/repo/tmp/cache/*
+RUN flatpak install --system -y flathub io.github.flattool.Ignition && \
+    rm -rf /var/lib/flatpak/repo/tmp/cache/* /var/tmp/flatpak-cache-* /root/.local/share/flatpak/repo/tmp/cache/*
+RUN flatpak install --system -y flathub com.github.tchx84.Flatseal && \
+    rm -rf /var/lib/flatpak/repo/tmp/cache/* /var/tmp/flatpak-cache-* /root/.local/share/flatpak/repo/tmp/cache/*
+RUN flatpak install --system -y flathub io.github.giantpinkrobots.flatsweep && \
+    rm -rf /var/lib/flatpak/repo/tmp/cache/* /var/tmp/flatpak-cache-* /root/.local/share/flatpak/repo/tmp/cache/*
+RUN flatpak install --system -y flathub com.mattjakeman.ExtensionManager && \
+    rm -rf /var/lib/flatpak/repo/tmp/cache/* /var/tmp/flatpak-cache-* /root/.local/share/flatpak/repo/tmp/cache/*
+RUN flatpak install --system -y flathub page.tesk.Refine && \
+    rm -rf /var/lib/flatpak/repo/tmp/cache/* /var/tmp/flatpak-cache-* /root/.local/share/flatpak/repo/tmp/cache/*
+RUN flatpak install --system -y flathub org.onlyoffice.desktopeditors && \
+    rm -rf /var/lib/flatpak/repo/tmp/cache/* /var/tmp/flatpak-cache-* /root/.local/share/flatpak/repo/tmp/cache/*
