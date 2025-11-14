@@ -11,13 +11,4 @@ COPY build_files/bin/pureblue-update /usr/bin/pureblue-update
 RUN chmod +x /usr/bin/pureblue-update
 
 # Create desktop entry for pureblue-update
-RUN cat > /usr/share/applications/pureblue-update.desktop <<'EOF'
-[Desktop Entry]
-Type=Application
-Name=System Update
-Comment=Update system, Flatpaks, Distrobox containers, and more
-Icon=software-update-available
-Categories=System;Utility;
-Terminal=true
-Exec=/usr/bin/pureblue-update
-EOF
+COPY build_files/pureblue-update.desktop /usr/share/applications/pureblue-update.desktop
