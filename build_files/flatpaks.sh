@@ -7,6 +7,15 @@ echo "==> Installing system flatpaks"
 # Add Flathub repository if not already added
 flatpak remote-add --if-not-exists --system flathub https://flathub.org/repo/flathub.flatpakrepo
 
+# Download and install purebazaar flatpak
+echo "==> Downloading purebazaar flatpak"
+curl -L -o /tmp/purebazaar.flatpak https://github.com/pureblue-os/purebazaar/releases/latest/download/purebazaar.flatpak
+if [[ -f /tmp/purebazaar.flatpak ]]; then
+    echo "==> Installing purebazaar from downloaded file"
+    flatpak install --system -y --bundle /tmp/purebazaar.flatpak
+    rm -f /tmp/purebazaar.flatpak
+fi
+
 # Install system flatpaks
 flatpak install --system -y flathub com.usebottles.bottles
 flatpak install --system -y flathub io.github.dvlv.boxbuddyrs
