@@ -9,7 +9,7 @@ flatpak remote-add --if-not-exists --system flathub https://flathub.org/repo/fla
 
 # Download and install purebazaar flatpak
 echo "==> Downloading purebazaar flatpak"
-curl -L -o /tmp/purebazaar.flatpak https://github.com/pureblue-os/purebazaar/releases/latest/download/purebazaar.flatpak
+curl -L -o /tmp/purebazaar.flatpak https://github.com/pureblue-os/purebazaar/actions/runs/19352801501/artifacts/4564087830
 if [[ -f /tmp/purebazaar.flatpak ]]; then
     echo "==> Installing purebazaar from downloaded file"
     flatpak install --system -y --bundle /tmp/purebazaar.flatpak
