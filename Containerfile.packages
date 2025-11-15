@@ -2,5 +2,5 @@ ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
 RUN dnf5 remove -y libreoffice*
-RUN dnf5 install -y tmux waydroid curl unzip glib2
+RUN dnf5 install -y tmux waydroid curl unzip glib2 fuse-libs
 RUN systemctl enable podman.socket
