@@ -1,0 +1,10 @@
+ARG REPO_IMAGE
+ARG BASE_IMAGE
+FROM ${REPO_IMAGE} AS repo
+FROM ${BASE_IMAGE}
+
+# Copy repo layers WITHOUT collapsing them
+COPY --from=repo /output/repo /usr/lib/flatpak/repo
+
+RUN mkdir -p /etc/flatpak/remotes.d/
+COPY pureblue-localrepo.flatpakrepo /etc/flatpak/remotes.d/

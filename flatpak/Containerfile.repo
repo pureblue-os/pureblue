@@ -1,0 +1,14 @@
+FROM fedora:latest
+
+ARG FLATPAK_LIST
+
+RUN dnf install -y flatpak && \
+    flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
+# Install apps inside a clean environment
+RUN set -euo pipefail && \
+    mkdir -p /output/repo && \
+    for appid in ${FLATPAK_LIST}; do \
+        flatpak install --system -y flathub "$appid"; \
+    done && \
+    cp -a /var/lib/flatpak/repo/* /output/repo/
