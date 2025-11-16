@@ -28,4 +28,6 @@ RUN set -euo pipefail && \
             ostree --repo=/output/repo pull-local "$bundledir" "$ref"; \
         done; \
         rm -rf "$bundledir" "/tmp/$filename"; \
-    done
+    done && \
+    # Generate summary file for the repo \
+    ostree --repo=/output/repo summary -u

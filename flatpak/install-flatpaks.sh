@@ -1,8 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
-# Add local repo as remote
-flatpak remote-add --system --no-gpg-verify pureblue-local file:///usr/share/flatpak/system-repo || true
+# Remove existing remote if present and add local repo as remote
+flatpak remote-delete --system --force pureblue-local 2>/dev/null || true
+flatpak remote-add --system --no-gpg-verify pureblue-local file:///usr/share/flatpak/system-repo
 
 # Read app IDs and install them
 if [ -f /usr/share/flatpak/system-repo/app-ids.txt ]; then
