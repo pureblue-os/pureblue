@@ -23,5 +23,5 @@ RUN set -euo pipefail && \
         [ -d "$appdir/current/active" ] || continue; \
         appid=$(basename "$appdir"); \
         echo "$appid" >> /output/repo/app-ids.txt; \
-        flatpak build-export /output/repo "$appdir/current/active"; \
+        flatpak build-export --disable-sandbox /output/repo "$appdir/current/active"; \
     done
