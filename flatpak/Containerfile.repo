@@ -5,26 +5,27 @@ ARG FLATPAK_BUNDLE_LIST
 RUN dnf install -y flatpak curl ostree && \
     flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
-# Install apps from bundles and export to local repo
+# Extract apps from bundles and export to local repo
 RUN set -euo pipefail && \
-    mkdir -p /output/repo && \
+    mkdir -p /output/repo /tmp/extract && \
     ostree init --mode=archive --repo=/output/repo && \
-    # Download and install from bundle URLs \
+    > /output/repo/app-ids.txt && \
+    # Download bundles and export directly from them \
     for url in ${FLATPAK_BUNDLE_LIST}; do \
         [ -z "$url" ] && continue; \
         filename=$(basename "$url"); \
         curl -L -o "/tmp/$filename" "$url"; \
-        flatpak install --system -y --bundle "/tmp/$filename"; \
-        rm -f "/tmp/$filename"; \
-    done && \
-    # Export all installed apps to repo and collect app IDs \
-    > /output/repo/app-ids.txt && \
-    for appdir in /var/lib/flatpak/app/*; do \
-        [ -d "$appdir/current/active" ] || continue; \
-        # Sanitize .desktop files: some bundles contain malformed Exec placeholders like "@@u"
-        # which cause "Invalid Exec argument @@u" during install. Replace only on Exec lines.
-        find "$appdir/current/active/files" -type f -name '*.desktop' -exec sed -i '/^Exec=/s/@@/%/g' {} + || true; \
-        appid=$(basename "$appdir"); \
-        echo "$appid" >> /output/repo/app-ids.txt; \
-        flatpak build-export --disable-sandbox /output/repo "$appdir/current/active"; \
+        # Extract bundle to temporary location \
+        bundledir="/tmp/extract/$(basename "$filename" .flatpak)"; \
+        mkdir -p "$bundledir"; \
+        ostree --repo="$bundledir" init --mode=bare-user; \
+        flatpak build-import-bundle "$bundledir" "/tmp/$filename"; \
+        # Get the app ID from the bundle \
+        appid=$(ostree --repo="$bundledir" refs | grep '^app/' | sed 's|^app/||' | sed 's|/.*||' | head -n1); \
+        [ -n "$appid" ] && echo "$appid" >> /output/repo/app-ids.txt; \
+        # Export from the extracted bundle to our repo \
+        for ref in $(ostree --repo="$bundledir" refs | grep '^app/'); do \
+            ostree --repo=/output/repo pull-local "$bundledir" "$ref"; \
+        done; \
+        rm -rf "$bundledir" "/tmp/$filename"; \
     done
