@@ -21,6 +21,9 @@ RUN set -euo pipefail && \
     > /output/repo/app-ids.txt && \
     for appdir in /var/lib/flatpak/app/*; do \
         [ -d "$appdir/current/active" ] || continue; \
+        # Sanitize .desktop files: some bundles contain malformed Exec placeholders like "@@u"
+        # which cause "Invalid Exec argument @@u" during install. Replace only on Exec lines.
+        find "$appdir/current/active/files" -type f -name '*.desktop' -exec sed -i '/^Exec=/s/@@/%/g' {} + || true; \
         appid=$(basename "$appdir"); \
         echo "$appid" >> /output/repo/app-ids.txt; \
         flatpak build-export --disable-sandbox /output/repo "$appdir/current/active"; \
