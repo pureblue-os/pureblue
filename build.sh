@@ -2,19 +2,21 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Arguments
 BASE_IMAGE=${1:-ghcr.io/pureblue-os/gnome:latest}
 FINAL_IMAGE=${2:-localhost/pureblue:latest}
 
 echo "==> Building container from $BASE_IMAGE to $FINAL_IMAGE"
 
-# echo "==> Building flatpaks layer"
-# ./flatpak/build-repo.sh "$BASE_IMAGE"
-
 TEMP_IMAGE="localhost/pureblue:building-$$"
 
+echo "==> Building flatpaks layer"
+"$SCRIPT_DIR/flatpak/build-repo.sh" "$BASE_IMAGE" "$TEMP_IMAGE"
+
 echo "==> Building packages layer"
-podman build --build-arg BASE_IMAGE="$BASE_IMAGE" -f Containerfile.packages -t "$TEMP_IMAGE" .
+podman build --build-arg BASE_IMAGE="$TEMP_IMAGE" -f Containerfile.packages -t "$TEMP_IMAGE" .
 
 echo "==> Building extensions layer"
 podman build --build-arg BASE_IMAGE="$TEMP_IMAGE" -f Containerfile.extensions -t "$TEMP_IMAGE" .

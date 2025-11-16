@@ -1,0 +1,12 @@
+[Unit]
+Description=Install PureBlue System Flatpaks
+After=network.target
+ConditionPathExists=/usr/share/flatpak/system-repo
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/pureblue/install-flatpaks.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

@@ -2,34 +2,37 @@
 set -euo pipefail
 
 BASE_IMAGE=${1:?BASE_IMAGE argument required}
+OUTPUT_IMAGE=${2:?OUTPUT_IMAGE argument required}
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# List of flatpak IDs to install (one per line)
-FLATPAK_APPS=(
-    "page.tesk.Refine"
-    "com.mattjakeman.ExtensionManager"
+# List of flatpak bundle URLs to install (one per line)
+# Format: "https://example.com/app.flatpak"
+FLATPAK_BUNDLES=(
+    "https://github.com/pureblue-os/purebazaar/releases/download/v0.5.11.pure.20251114/Bazaar.flatpak"
 )
 
 # Convert array to space-separated string
-FLATPAK_LIST="${FLATPAK_APPS[*]}"
+FLATPAK_BUNDLE_LIST="${FLATPAK_BUNDLES[*]}"
 
 echo "[+] Building container to fetch flatpaks..."
-echo "    Apps: $FLATPAK_LIST"
-podman rmi flatpakrepo:unchunked || true
+echo "    Bundles: $FLATPAK_BUNDLE_LIST"
+podman rmi flatpakrepo:built || true
 podman build \
-    --build-arg FLATPAK_LIST="$FLATPAK_LIST" \
+    --build-arg FLATPAK_BUNDLE_LIST="$FLATPAK_BUNDLE_LIST" \
     -f Containerfile.repo \
-    -t flatpakrepo:unchunked \
+    -t flatpakrepo:built \
     "$SCRIPT_DIR"
 
-$SCRIPT_DIR/chunk-layer.sh flatpakrepo:unchunked flatpakrepo:chunked 50
+# TODO: Add chunking support with chunk-layer.sh if needed
+# $SCRIPT_DIR/chunk-layer.sh flatpakrepo:built flatpakrepo:chunked 50
 
+echo "[+] Building final flatpak layer..."
 podman build \
   --build-arg BASE_IMAGE="$BASE_IMAGE" \
-  --build-arg REPO_IMAGE="flatpakrepo:chunked" \
+  --build-arg REPO_IMAGE="flatpakrepo:built" \
   -f Containerfile.copy \
-  -t "$BASE_IMAGE" \
+  -t "$OUTPUT_IMAGE" \
   "$SCRIPT_DIR"
 
 

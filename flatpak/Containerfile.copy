@@ -3,8 +3,13 @@ ARG BASE_IMAGE
 FROM ${REPO_IMAGE} AS repo
 FROM ${BASE_IMAGE}
 
-# Copy repo layers WITHOUT collapsing them
-COPY --from=repo /output/repo /usr/lib/flatpak/repo
+# Copy repo layers WITHOUT collapsing them (includes app-ids.txt)
+COPY --from=repo /output/repo /usr/share/flatpak/system-repo
 
-RUN mkdir -p /etc/flatpak/remotes.d/
-COPY pureblue-localrepo.flatpakrepo /etc/flatpak/remotes.d/
+# Copy install script and systemd service
+RUN mkdir -p /usr/libexec/pureblue
+COPY install-flatpaks.sh /usr/libexec/pureblue/install-flatpaks.sh
+RUN chmod +x /usr/libexec/pureblue/install-flatpaks.sh
+
+COPY pureblue-flatpaks.service /etc/systemd/system/pureblue-flatpaks.service
+RUN systemctl enable pureblue-flatpaks.service

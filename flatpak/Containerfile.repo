@@ -1,14 +1,26 @@
 FROM fedora:latest
 
-ARG FLATPAK_LIST
+ARG FLATPAK_BUNDLE_LIST
 
-RUN dnf install -y flatpak && \
+RUN dnf install -y flatpak curl ostree && \
     flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
-# Install apps inside a clean environment
+# Install apps from bundles and export to local repo
 RUN set -euo pipefail && \
-    mkdir -p /output/repo && \
-    for appid in ${FLATPAK_LIST}; do \
-        flatpak install --system -y flathub "$appid"; \
+    ostree init --mode=archive --repo=/output/repo && \
+    # Download and install from bundle URLs \
+    for url in ${FLATPAK_BUNDLE_LIST}; do \
+        [ -z "$url" ] && continue; \
+        filename=$(basename "$url"); \
+        curl -L -o "/tmp/$filename" "$url"; \
+        flatpak install --system -y --bundle "/tmp/$filename"; \
+        rm -f "/tmp/$filename"; \
     done && \
-    cp -a /var/lib/flatpak/repo/* /output/repo/
+    # Export all installed apps to repo and collect app IDs \
+    > /output/repo/app-ids.txt && \
+    for appdir in /var/lib/flatpak/app/*; do \
+        [ -d "$appdir/current/active" ] || continue; \
+        appid=$(basename "$appdir"); \
+        echo "$appid" >> /output/repo/app-ids.txt; \
+        flatpak build-export --include-sdk --include-deps /output/repo "$appdir/current/active"; \
+    done
