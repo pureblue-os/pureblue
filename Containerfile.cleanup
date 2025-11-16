@@ -1,0 +1,18 @@
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+
+# Some images be a bad tenants and leave their trash behind.
+# So we clean up after them.
+
+# Remove ublue OS system-wide markers and configuration
+# This cleans up Universal Blue branding and configuration from the base image
+RUN set -x && \
+    # Remove ublue OS markers and configuration
+    rm -rf /etc/ublue /etc/ublue-os || true && \
+    # Remove flatpak ublue initialization marker
+    rm -f /var/lib/flatpak/.ublue-initialized || true && \
+    # Remove ublue-related rpm-ostree cache
+    rm -rf /var/cache/rpm-ostree/repomd/copr:copr.fedorainfracloud.org:ublue-os:* || true && \
+    # Ensure Flathub filter is removed (may already be done in base)
+    flatpak remote-modify --system --no-filter flathub 2>/dev/null || true && \
+    echo "Ublue OS cleanup completed."

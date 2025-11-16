@@ -12,8 +12,11 @@ echo "==> Building container from $BASE_IMAGE to $FINAL_IMAGE"
 
 TEMP_IMAGE="localhost/pureblue:building-$$"
 
+echo "==> Building cleanup layer"
+podman build --build-arg BASE_IMAGE="$BASE_IMAGE" -f Containerfile.cleanup -t "$TEMP_IMAGE" .
+
 echo "==> Building flatpaks layer"
-"$SCRIPT_DIR/flatpak/build-repo.sh" "$BASE_IMAGE" "$TEMP_IMAGE"
+"$SCRIPT_DIR/flatpak/build-repo.sh" "$TEMP_IMAGE" "$TEMP_IMAGE"
 
 echo "==> Building packages layer"
 podman build --build-arg BASE_IMAGE="$TEMP_IMAGE" -f Containerfile.packages -t "$TEMP_IMAGE" .
