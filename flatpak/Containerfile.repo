@@ -7,6 +7,7 @@ RUN dnf install -y flatpak curl ostree && \
 
 # Install apps from bundles and export to local repo
 RUN set -euo pipefail && \
+    mkdir -p /output/repo && \
     ostree init --mode=archive --repo=/output/repo && \
     # Download and install from bundle URLs \
     for url in ${FLATPAK_BUNDLE_LIST}; do \
