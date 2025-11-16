@@ -13,3 +13,6 @@ if [ -f /usr/share/flatpak/system-repo/app-ids.txt ]; then
         flatpak install --system -y pureblue-local "$appid" || echo "Failed to install $appid"
     done
 fi
+
+# Remove the temporary remote after installation
+flatpak remote-delete --system --force pureblue-local 2>/dev/null || true
