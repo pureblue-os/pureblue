@@ -11,5 +11,5 @@ RUN mkdir -p /usr/libexec/pureblue
 COPY install-flatpaks.sh /usr/libexec/pureblue/install-flatpaks.sh
 RUN chmod +x /usr/libexec/pureblue/install-flatpaks.sh
 
-COPY pureblue-flatpaks.service /etc/systemd/system/pureblue-flatpaks.service
+COPY pureblue-flatpaks.service /usr/etc/systemd/system/pureblue-flatpaks.service
 RUN systemctl enable pureblue-flatpaks.service
