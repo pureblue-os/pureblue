@@ -1,5 +1,5 @@
 ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
-RUN dnf5 remove -y libreoffice*
+RUN dnf5 remove -y libreoffice* gnome-software
 RUN dnf5 install -y tmux waydroid
