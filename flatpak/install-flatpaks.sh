@@ -5,12 +5,17 @@ set -euo pipefail
 flatpak remote-delete --system --force pureblue-local 2>/dev/null || true
 flatpak remote-add --system --no-gpg-verify pureblue-local file:///usr/share/flatpak/system-repo
 
-# Install flatpaks
+# Install or update flatpaks
 if [ -f /usr/share/flatpak/system-repo/app-ids.txt ]; then
     while read -r appid; do
         [ -z "$appid" ] && continue
-        echo "Installing $appid from local repo..."
-        flatpak install --system -y pureblue-local "$appid" || echo "Failed to install $appid"
+        if flatpak list --system --app --columns=application | grep -qx "$appid"; then
+            echo "Updating $appid from local repo..."
+            flatpak update --system -y "$appid" || echo "Failed to update $appid"
+        else
+            echo "Installing $appid from local repo..."
+            flatpak install --system -y pureblue-local "$appid" || echo "Failed to install $appid"
+        fi
     done < /usr/share/flatpak/system-repo/app-ids.txt
 fi
 
