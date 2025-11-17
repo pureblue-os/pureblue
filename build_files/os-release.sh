@@ -4,6 +4,9 @@ set -euo pipefail
 
 echo "==> Configuring Pureblue branding in os-release"
 
+# Validate required environment variable
+IMAGE_ID=${IMAGE_ID:?required}
+
 # Extract Fedora version from the base image
 FEDORA_VERSION=$(rpm -E %fedora)
 BUILD_DATE=$(date +%Y%m%d)
@@ -32,7 +35,7 @@ VARIANT="Silverblue"
 VARIANT_ID=pureblue
 OSTREE_VERSION='${FEDORA_VERSION}.${BUILD_DATE}'
 BUILD_ID="${BUILD_DATE}"
-IMAGE_ID="pureblue"
+IMAGE_ID="${IMAGE_ID}"
 IMAGE_VERSION="${FEDORA_VERSION}.${BUILD_DATE}"
 EOF
 

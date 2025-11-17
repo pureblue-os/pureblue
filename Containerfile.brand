@@ -1,7 +1,8 @@
 ARG BASE_IMAGE
+ARG IMAGE_ID=pureblue
 FROM scratch AS ctx
 COPY build_files /
 FROM ${BASE_IMAGE}
 
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
-    /ctx/os-release.sh
+    IMAGE_ID=${IMAGE_ID} /ctx/os-release.sh

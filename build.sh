@@ -4,11 +4,11 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Arguments
-BASE_IMAGE=${1:-ghcr.io/pureblue-os/gnome:latest}
-FINAL_IMAGE=${2:-localhost/pureblue:latest}
+BASE_IMAGE=${1:?required}
+IMAGE_ID=${2:?required}
+FINAL_IMAGE="localhost/${IMAGE_ID}:latest"
 
-echo "==> Building container from $BASE_IMAGE to $FINAL_IMAGE"
+echo "==> Building container from $BASE_IMAGE to $FINAL_IMAGE (IMAGE_ID: $IMAGE_ID)"
 
 TEMP_IMAGE="localhost/pureblue:building-$$"
 
@@ -31,7 +31,7 @@ echo "==> Building final layer"
 podman build --build-arg BASE_IMAGE="$TEMP_IMAGE" -f Containerfile.final -t "$TEMP_IMAGE" .
 
 echo "==> Building brand layer"
-podman build --build-arg BASE_IMAGE="$TEMP_IMAGE" -f Containerfile.brand -t "$TEMP_IMAGE" .
+podman build --build-arg BASE_IMAGE="$TEMP_IMAGE" --build-arg IMAGE_ID="$IMAGE_ID" -f Containerfile.brand -t "$TEMP_IMAGE" .
 
 # Tag final image
 echo "==> Tagging as $FINAL_IMAGE"

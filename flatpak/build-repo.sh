@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BASE_IMAGE=${1:?BASE_IMAGE argument required}
-OUTPUT_IMAGE=${2:?OUTPUT_IMAGE argument required}
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+BASE_IMAGE=${1:?required}
+OUTPUT_IMAGE=${2:?required}
 
 # List of flatpak bundle URLs to install (one per line)
 # Format: "https://example.com/app.flatpak"
