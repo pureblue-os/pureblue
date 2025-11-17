@@ -22,33 +22,34 @@ flatpak remote-delete --system --force pureblue-local 2>/dev/null || true
 
 
 ################################################################################
-# GENERATE CLEANUP SCRIPT (INLINE COMMANDS, NO LOOP)
+# GENERATE CLEANUP SCRIPT (QUERIES FLATPAK FOR APPS FROM pureblue-local)
 ################################################################################
 
-{
-    echo "#!/bin/bash"
-    echo "set -euo pipefail"
-    echo ""
+cat > /etc/pureblue-cleaner.sh << 'CLEANUP_EOF'
+#!/bin/bash
+set -euo pipefail
 
-    # Pureblue detection — use real installer path
-    echo "if [ -f \"$INSTALLER_PATH\" ]; then"
-    echo "    exit 0"
-    echo "fi"
-    echo ""
+# Pureblue detection — use real installer path
+if [ -f "$INSTALLER_PATH" ]; then
+    exit 0
+fi
 
-    # Inline uninstall commands
-    while read -r appid; do
-        [ -z "$appid" ] && continue
-        echo "echo \"Removing Pureblue flatpak: $appid\""
-        echo "flatpak uninstall --system -y \"$appid\" || true"
-    done < /usr/share/flatpak/system-repo/app-ids.txt
+# Find and remove all flatpaks that came from pureblue-local remote
+echo "Searching for Pureblue flatpaks to remove..."
+flatpak list --system --app --columns=application,origin | while read -r line; do
+    appid=$(echo "$line" | awk '{print $1}')
+    origin=$(echo "$line" | awk '{print $2}')
+    
+    if [ "$origin" = "pureblue-local" ]; then
+        echo "Removing Pureblue flatpak: $appid"
+        flatpak uninstall --system -y "$appid" || true
+    fi
+done
 
-    echo ""
-    echo "rm -f /etc/pureblue-cleaner.sh"
-    echo "rm -f /etc/systemd/system/pureblue-cleaner.service"
-    echo "systemctl daemon-reload"
-
-} > /etc/pureblue-cleaner.sh
+rm -f /etc/pureblue-cleaner.sh
+rm -f /etc/systemd/system/pureblue-cleaner.service
+systemctl daemon-reload
+CLEANUP_EOF
 
 chmod +x /etc/pureblue-cleaner.sh
 
