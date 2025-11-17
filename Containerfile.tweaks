@@ -3,6 +3,3 @@ FROM ${BASE_IMAGE}
 
 RUN rm -rf /usr/share/backgrounds/gnome/* && \
     rm -rf /usr/share/gnome-background-properties/*
-
-COPY build_files/bin/pureblue-update /usr/bin/pureblue-update
-COPY build_files/pureblue-update.desktop /usr/share/applications/pureblue-update.desktop

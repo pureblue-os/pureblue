@@ -1,8 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=System Update
-Comment=Update system, Flatpaks, Distrobox containers, and more
-Icon=software-update-available
-Categories=System;Utility;
-Terminal=true
-Exec=/usr/bin/pureblue-update
