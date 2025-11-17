@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # List of flatpak bundle URLs to install (one per line)
 # Format: "https://example.com/app.flatpak"
 FLATPAK_BUNDLES=(
-    "https://github.com/pureblue-os/purebazaar/releases/download/v0.5.11.pure.20251114/Bazaar.flatpak"
+    "https://github.com/pureblue-os/purestore/releases/download/v0.5.11.pure.2025-11-17.1/Store.flatpak"
 )
 
 # Convert array to space-separated string
