@@ -46,9 +46,13 @@ flatpak list --system --app --columns=application,origin | while read -r line; d
     fi
 done
 
-rm -f /etc/pureblue-cleaner.sh
+# Remove the systemd unit and reload systemd first, then remove this script file
 rm -f /etc/systemd/system/pureblue-cleaner.service
 systemctl daemon-reload
+
+# Delete the cleaner script itself last to avoid potential issues while the
+# script is still running or being read.
+rm -f /etc/pureblue-cleaner.sh
 CLEANUP_EOF
 
 chmod +x /etc/pureblue-cleaner.sh
