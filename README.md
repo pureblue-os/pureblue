@@ -8,16 +8,20 @@ A **Fedora immutable bootc image for everyone**. It's close to vanilla **GNOME**
 - Out-of-the-box setup so you can just start using your system
 - Supports **bootc swap** style workflows (switch between images / editions without reinstalling)
 
-## Switch & Update
+## Switch & Update (bootc)
 
 ```bash
 # Switch
 sudo bootc switch ghcr.io/pureblue-os/pureblue:latest
-sudo reboot
+reboot
 
-# Update
+# Update (bootc)
 sudo bootc upgrade
-sudo reboot
+reboot
+
+# Update (rpm-ostree)
+rpm-ostree upgrade
+reboot
 ```
 
 ## Asus ROG
