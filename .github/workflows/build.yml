@@ -122,38 +122,18 @@ jobs:
       - name: Build Image
         id: build_image
         run: |
-          # Run variant-specific build script
           bash "build-${{ matrix.variant }}.sh" "${{ env.VARIANT_IMAGE_NAME }}:${{ env.DEFAULT_TAG }}"
-
-          # Apply metadata tags
           for tag in ${{ steps.metadata.outputs.tags }}; do
             podman tag "${{ env.VARIANT_IMAGE_NAME }}:${{ env.DEFAULT_TAG }}" "${{ env.VARIANT_IMAGE_NAME }}:$tag"
           done
-      
-      - name: Convert to Chunked OCI
-        id: chunkify
-        run: |
-          RAW_IMAGE="${{ env.VARIANT_IMAGE_NAME }}:${{ env.DEFAULT_TAG }}-raw"
-          FINAL_IMAGE="${{ env.VARIANT_IMAGE_NAME }}:${{ env.DEFAULT_TAG }}"
 
-          echo "==> Tag raw image: $RAW_IMAGE"
-          podman tag "$FINAL_IMAGE" "$RAW_IMAGE"
-
-          echo "==> Building chunked OCI..."
-          mkdir -p chunked
-          rpm-ostree build-chunked-oci \
-            --bootc \
-            --format-version=2 \
-            --repo=chunked/repo \
-            oci:$RAW_IMAGE \
-            --output=chunked/image.oci
-
-          echo "==> Import chunked OCI back into podman storage"
-          skopeo copy \
-            oci-archive:chunked/image.oci \
-            containers-storage:$FINAL_IMAGE
-
-          echo "chunked_image=$FINAL_IMAGE" >> $GITHUB_OUTPUT
+      # Rechunk the built image (uses podman + root on ubuntu-24.04)
+      - name: Rechunk image
+        uses: hhd-dev/rechunk@v1
+        # you probably only want this on non-PR builds, tweak the condition as you like
+        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        with:
+          image: localhost/${{ env.VARIANT_IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3
