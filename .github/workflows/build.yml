@@ -122,9 +122,9 @@ jobs:
       - name: Build Image
         id: build_image
         run: |
-          bash "build-${{ matrix.variant }}.sh" "${{ env.VARIANT_IMAGE_NAME }}:${{ env.DEFAULT_TAG }}"
+          sudo bash "build-${{ matrix.variant }}.sh" "${{ env.VARIANT_IMAGE_NAME }}:${{ env.DEFAULT_TAG }}"
           for tag in ${{ steps.metadata.outputs.tags }}; do
-            podman tag "${{ env.VARIANT_IMAGE_NAME }}:${{ env.DEFAULT_TAG }}" "${{ env.VARIANT_IMAGE_NAME }}:$tag"
+            sudo podman tag "${{ env.VARIANT_IMAGE_NAME }}:${{ env.DEFAULT_TAG }}" "${{ env.VARIANT_IMAGE_NAME }}:$tag"
           done
 
       # Rechunk the built image (uses podman + root on ubuntu-24.04)
