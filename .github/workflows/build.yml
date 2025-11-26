@@ -154,10 +154,13 @@ jobs:
       - name: Push rechunked image to GHCR
         if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         id: push
+        env:
+          REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         run: |
           DIGEST=""
           for tag in ${{ steps.metadata.outputs.tags }}; do
             sudo skopeo copy \
+              --dest-creds=${{ github.actor }}:$REGISTRY_PASSWORD \
               ${{ steps.rechunk.outputs.ref }} \
               docker://${{ env.IMAGE_REGISTRY }}/${{ env.VARIANT_IMAGE_NAME }}:$tag
             if [[ -z "$DIGEST" ]]; then
