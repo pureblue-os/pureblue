@@ -126,8 +126,16 @@ jobs:
           for tag in ${{ steps.metadata.outputs.tags }}; do
             sudo podman tag "${{ env.VARIANT_IMAGE_NAME }}:${{ env.DEFAULT_TAG }}" "${{ env.VARIANT_IMAGE_NAME }}:$tag"
           done
+          # Extract Fedora version from the built image
+          FEDORA_VERSION=$(sudo podman run --rm ${{ env.VARIANT_IMAGE_NAME }}:${{ env.DEFAULT_TAG }} rpm -E %fedora)
+          echo "fedora_version=$FEDORA_VERSION" >> $GITHUB_OUTPUT
 
       # Rechunk the built image (uses podman + root on ubuntu-24.04)
+      - name: Get short SHA
+        id: short_sha
+        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        run: echo "sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
       - name: Load rechunk action
         if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         uses: actions/checkout@v4
@@ -142,6 +150,9 @@ jobs:
         uses: ./.rechunk
         with:
           ref: localhost/${{ env.VARIANT_IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
+          # Version format: fedora.YYYYMMDD.shortsha (e.g., 41.20251126.abc1234)
+          version: "${{ steps.build_image.outputs.fedora_version }}.{{date 'YYYYMMDD'}}.${{ steps.short_sha.outputs.sha }}"
+          revision: ${{ github.sha }}
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3
