@@ -35,5 +35,5 @@ sudo rpm-ostree override remove tuned-ppd \
   --install=asusctl-rog-gui \
   --install=power-profiles-daemon \
   --install=supergfxctl
-
+reboot
 ```
