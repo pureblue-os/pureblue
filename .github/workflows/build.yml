@@ -157,7 +157,7 @@ jobs:
         run: |
           DIGEST=""
           for tag in ${{ steps.metadata.outputs.tags }}; do
-            skopeo copy \
+            sudo skopeo copy \
               ${{ steps.rechunk.outputs.ref }} \
               docker://${{ env.IMAGE_REGISTRY }}/${{ env.VARIANT_IMAGE_NAME }}:$tag
             if [[ -z "$DIGEST" ]]; then
