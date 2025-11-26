@@ -130,8 +130,7 @@ jobs:
       # Rechunk the built image (uses podman + root on ubuntu-24.04)
       - name: Rechunk image
         id: rechunk
-        uses: ghcr.io/hhd-dev/rechunk@stable
-        # you probably only want this on non-PR builds, tweak the condition as you like
+        uses: docker://ghcr.io/hhd-dev/rechunk:stable
         if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         with:
           ref: localhost/${{ env.VARIANT_IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
@@ -148,11 +147,20 @@ jobs:
         if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         id: push
         run: |
+          # Rechunk outputs OCI dir to workspace with name derived from image ref
+          # localhost/pureblue:latest -> localhost_pureblue_latest
+          OCI_DIR="${{ github.workspace }}/localhost_${{ env.VARIANT_IMAGE_NAME }}_${{ env.DEFAULT_TAG }}"
+          DIGEST=""
           for tag in ${{ steps.metadata.outputs.tags }}; do
             skopeo copy \
-              oci:${{ steps.rechunk.outputs.location }} \
+              oci:${OCI_DIR} \
               docker://${{ env.IMAGE_REGISTRY }}/${{ env.VARIANT_IMAGE_NAME }}:$tag
+            if [[ -z "$DIGEST" ]]; then
+              DIGEST=$(skopeo inspect docker://${{ env.IMAGE_REGISTRY }}/${{ env.VARIANT_IMAGE_NAME }}:$tag --format '{{.Digest}}')
+            fi
           done
+          echo "digest=$DIGEST" >> $GITHUB_OUTPUT
+          echo "registry-path=${{ env.IMAGE_REGISTRY }}/${{ env.VARIANT_IMAGE_NAME }}" >> $GITHUB_OUTPUT
 
       # This section is optional and only needs to be enabled if you plan on distributing
       # your project for others to consume. You will need to create a public and private key
