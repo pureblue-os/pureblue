@@ -1,8 +1,8 @@
 # pureblue
 
-pureblue is a **Fedora immutable bootc image for everyone** — a close to vanilla **GNOME** desktop with sane defaults for normal users.
+pureblue is a **Fedora immutable bootc image for everyone**. It's close to vanilla **GNOME** desktop experince with sane defaults for normal everyday users.
 
-- Based on **Fedora**
+- Based on **Fedora Bootc**
 - **Immutable** image with atomic updates
 - Close to **vanilla GNOME** experience
 - Out-of-the-box setup so you can just start using your system
