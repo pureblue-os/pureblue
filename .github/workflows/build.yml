@@ -11,7 +11,7 @@ on:
       - master
     paths-ignore:
       - "**/README.md"
-      - .github/workflows/build-disk.yml
+      - ./.github/workflows/build-disk.yml
   workflow_dispatch:
 
 env:
