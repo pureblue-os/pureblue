@@ -56,6 +56,7 @@ jobs:
         id: build
         uses: osbuild/bootc-image-builder-action@main
         with:
+          config-file: ./disk_config/iso.toml
           image: ${{ env.IMAGE_REGISTRY }}/${{ env.VARIANT_IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
           chown: ${{ env.USER_UID }}:${{ env.USER_GID }}
           types: anaconda-iso
