@@ -65,15 +65,14 @@ jobs:
       - name: Rename ISO
         run: |
           cd ${{ steps.build.outputs.output-directory }}
-          for f in *.iso; do
-            mv "$f" "pureblue-${{ matrix.variant }}.iso"
-          done
+          ls -la
+          find . -name "*.iso" -exec mv {} pureblue-${{ matrix.variant }}.iso \;
 
       - name: Upload ISO artifact
         uses: actions/upload-artifact@v4
         with:
           name: pureblue-${{ matrix.variant }}-iso
-          path: ${{ steps.build.outputs.output-directory }}/*.iso
+          path: ${{ steps.build.outputs.output-directory }}/pureblue-${{ matrix.variant }}.iso
           if-no-files-found: error
           retention-days: 1
           compression-level: 0
