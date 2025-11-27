@@ -24,9 +24,6 @@ podman build \
     -t flatpakrepo:built \
     "$SCRIPT_DIR"
 
-# TODO: Add chunking support with chunk-layer.sh if needed
-# $SCRIPT_DIR/chunk-layer.sh flatpakrepo:built flatpakrepo:chunked 50
-
 echo "[+] Building final flatpak layer..."
 podman build \
   --build-arg BASE_IMAGE="$BASE_IMAGE" \
