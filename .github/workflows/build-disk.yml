@@ -103,6 +103,22 @@ jobs:
           echo "tag=$(date +%Y%m%d)" >> $GITHUB_OUTPUT
           echo "name=Pureblue $(date +%Y-%m-%d)" >> $GITHUB_OUTPUT
 
+      - name: Upload to S3
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+          AWS_ENDPOINT_URL: ${{ secrets.S3_ENDPOINT }}
+          S3_BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+        run: |
+          cd artifacts
+          for file in *.iso SHA256SUMS; do
+            aws s3 cp "$file" "s3://${S3_BUCKET}/${{ steps.tag.outputs.tag }}/$file"
+          done
+          # Also upload to "latest" folder
+          for file in *.iso SHA256SUMS; do
+            aws s3 cp "$file" "s3://${S3_BUCKET}/latest/$file"
+          done
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
@@ -110,6 +126,9 @@ jobs:
           name: ${{ steps.tag.outputs.name }}
           body: |
             Pureblue ISO release ${{ steps.tag.outputs.tag }}
+
+            ## Downloads
+            Download ISOs from: ${{ secrets.S3_PUBLIC_URL }}/${{ steps.tag.outputs.tag }}/
 
             ## Variants
             - **pureblue-base.iso** - Base image (no NVIDIA drivers)
@@ -119,7 +138,6 @@ jobs:
             ## Verification
             Verify your download with the SHA256SUMS file.
           files: |
-            artifacts/*.iso
             artifacts/SHA256SUMS
           draft: false
           prerelease: false
