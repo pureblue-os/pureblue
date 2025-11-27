@@ -14,9 +14,9 @@ SUPPORT_END=$(date -d "+13 months" +%Y-%m)
 
 cat > /usr/lib/os-release <<EOF
 NAME="Pureblue"
-VERSION="${FEDORA_VERSION} (Silverblue)"
+VERSION="${FEDORA_VERSION} (Bootc)"
 RELEASE_TYPE=stable
-ID=pureblue
+ID=fedora
 ID_LIKE="fedora"
 VERSION_ID=${FEDORA_VERSION}
 VERSION_CODENAME="Lily"
@@ -31,8 +31,8 @@ DOCUMENTATION_URL="https://github.com/pureblue-os/pureblue"
 SUPPORT_URL="https://github.com/pureblue-os/pureblue"
 BUG_REPORT_URL="https://github.com/pureblue-os/pureblue/issues"
 SUPPORT_END=${SUPPORT_END}
-VARIANT="Silverblue"
-VARIANT_ID=pureblue
+VARIANT="Bootc"
+VARIANT_ID=bootc
 OSTREE_VERSION='${FEDORA_VERSION}.${BUILD_DATE}'
 BUILD_ID="${BUILD_DATE}"
 IMAGE_ID="${IMAGE_ID}"
