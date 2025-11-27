@@ -1,4 +1,6 @@
 ARG BASE_IMAGE
+FROM scratch AS ctx
+COPY build_files /
 FROM ${BASE_IMAGE}
 
 # Remove all system extensions first
@@ -8,30 +10,12 @@ RUN rm -rf /usr/share/gnome-shell/extensions/*
 RUN dnf5 install -y gnome-shell-extension-gsconnect
 
 # Install extensions from extensions.gnome.org
-RUN GNOME_VERSION=$(gnome-shell --version | cut -d' ' -f3 | cut -d'.' -f1) && \
-    install_ext() { \
-        local UUID=$1; \
-        echo "Installing ${UUID}"; \
-        INFO=$(curl -sL "https://extensions.gnome.org/extension-info/?uuid=${UUID}"); \
-        PK=$(echo "${INFO}" | grep -o "\"${GNOME_VERSION}\": {\"pk\": [0-9]*" | grep -o "[0-9]*$" | head -1); \
-        if [ -n "${PK}" ]; then \
-            curl -sL "https://extensions.gnome.org/download-extension/${UUID}.shell-extension.zip?version_tag=${PK}" -o "/tmp/${UUID}.zip" && \
-            mkdir -p "/usr/share/gnome-shell/extensions/${UUID}" && \
-            unzip -q -o "/tmp/${UUID}.zip" -d "/usr/share/gnome-shell/extensions/${UUID}" && \
-            rm "/tmp/${UUID}.zip"; \
-        fi; \
-    } && \
-    install_ext "tweaks-system-menu@extensions.gnome-shell.fifi.org" && \
-    install_ext "tilingshell@ferrarodomenico.com" && \
-    install_ext "legacyschemeautoswitcher@joshimukul29.gmail.com" && \
-    install_ext "do-not-disturb-while-screen-sharing-or-recording@marcinjahn.com" && \
-    install_ext "clipboard-indicator@tudmotu.com" && \
-    install_ext "boostvolume@shaquib.dev" && \
-    install_ext "volume_scroller@francislavoie.github.io" && \
-    chmod -R a+r /usr/share/gnome-shell/extensions/ && \
-    find /usr/share/gnome-shell/extensions/ -type d -exec chmod a+rx {} \; && \
-    for ext_dir in /usr/share/gnome-shell/extensions/*/; do \
-        if [ -d "${ext_dir}schemas" ]; then \
-            glib-compile-schemas "${ext_dir}schemas/"; \
-        fi; \
-    done
+RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
+    /ctx/gnome-extension-install.sh \
+        "tweaks-system-menu@extensions.gnome-shell.fifi.org" \
+        "tilingshell@ferrarodomenico.com" \
+        "legacyschemeautoswitcher@joshimukul29.gmail.com" \
+        "do-not-disturb-while-screen-sharing-or-recording@marcinjahn.com" \
+        "clipboard-indicator@tudmotu.com" \
+        "boostvolume@shaquib.dev" \
+        "volume_scroller@francislavoie.github.io"
