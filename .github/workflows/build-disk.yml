@@ -7,7 +7,7 @@ on:
 env:
   IMAGE_NAME: "${{ github.event.repository.name }}"
   IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}"
-  DEFAULT_TAG: "latest"
+  DEFAULT_TAG: "stable"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
