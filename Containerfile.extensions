@@ -18,4 +18,5 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
         "do-not-disturb-while-screen-sharing-or-recording@marcinjahn.com" \
         "clipboard-indicator@tudmotu.com" \
         "boostvolume@shaquib.dev" \
-        "volume_scroller@francislavoie.github.io"
+        "volume_scroller@francislavoie.github.io" \
+        "unblank@sun.wxg@gmail.com"
