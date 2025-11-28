@@ -23,7 +23,7 @@ desktop experince with sane defaults for normal everyday users.
 **Switch to pureblue:**
 
 ```bash
-sudo bootc switch ghcr.io/pureblue-os/pureblue:latest
+sudo bootc switch ghcr.io/pureblue-os/pureblue:stable
 reboot
 ```
 
