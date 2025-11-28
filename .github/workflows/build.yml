@@ -170,16 +170,27 @@ jobs:
 
       - name: Push rechunked image to GHCR
         if: github.event_name != 'pull_request' && steps.check_existing.outputs.exists != 'true'
-        id: push
         env:
           REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Push rechunked image with a temporary sha tag (untagged push not possible with skopeo)
+          # Push rechunked image with sha tag
           sudo skopeo copy \
             --dest-creds=${{ github.actor }}:$REGISTRY_PASSWORD \
             ${{ steps.rechunk.outputs.ref }} \
             docker://${{ env.IMAGE_REGISTRY }}/${{ env.VARIANT_IMAGE_NAME }}:sha-${{ github.sha }}
-          echo "source=${{ env.IMAGE_REGISTRY }}/${{ env.VARIANT_IMAGE_NAME }}:sha-${{ github.sha }}" >> $GITHUB_OUTPUT
+
+      - name: Install oras
+        if: github.event_name != 'pull_request'
+        uses: oras-project/setup-oras@v1
+
+      - name: Create sha tag for existing image
+        if: github.event_name != 'pull_request' && steps.check_existing.outputs.exists == 'true'
+        env:
+          REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Tag existing latest with sha tag for consistency (no re-push)
+          echo "$REGISTRY_PASSWORD" | oras login ghcr.io -u ${{ github.actor }} --password-stdin
+          oras tag ${{ env.IMAGE_REGISTRY }}/${{ env.VARIANT_IMAGE_NAME }}:latest sha-${{ github.sha }}
 
       - name: Tag image
         if: github.event_name != 'pull_request'
@@ -187,26 +198,18 @@ jobs:
         env:
           REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Determine source: newly pushed image or existing latest
-          if [[ "${{ steps.check_existing.outputs.exists }}" == "true" ]]; then
-            SOURCE="${{ env.IMAGE_REGISTRY }}/${{ env.VARIANT_IMAGE_NAME }}:latest"
-            echo "Using existing image as source"
-          else
-            SOURCE="${{ steps.push.outputs.source }}"
-            echo "Using newly built image as source"
-          fi
+          SOURCE_TAG="sha-${{ github.sha }}"
 
-          # Add all tags
+          # Login for oras
+          echo "$REGISTRY_PASSWORD" | oras login ghcr.io -u ${{ github.actor }} --password-stdin
+
+          # Add all tags using oras (just tags, no re-push)
           for tag in ${{ steps.metadata.outputs.tags }}; do
             echo "Adding tag: $tag"
-            skopeo copy \
-              --dest-creds=${{ github.actor }}:$REGISTRY_PASSWORD \
-              --src-creds=${{ github.actor }}:$REGISTRY_PASSWORD \
-              docker://$SOURCE \
-              docker://${{ env.IMAGE_REGISTRY }}/${{ env.VARIANT_IMAGE_NAME }}:$tag
+            oras tag ${{ env.IMAGE_REGISTRY }}/${{ env.VARIANT_IMAGE_NAME }}:$SOURCE_TAG $tag
           done
 
-          DIGEST=$(skopeo inspect --creds=${{ github.actor }}:$REGISTRY_PASSWORD docker://$SOURCE --format '{{.Digest}}')
+          DIGEST=$(skopeo inspect --creds=${{ github.actor }}:$REGISTRY_PASSWORD docker://${{ env.IMAGE_REGISTRY }}/${{ env.VARIANT_IMAGE_NAME }}:$SOURCE_TAG --format '{{.Digest}}')
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
           echo "registry-path=${{ env.IMAGE_REGISTRY }}/${{ env.VARIANT_IMAGE_NAME }}" >> $GITHUB_OUTPUT
 
