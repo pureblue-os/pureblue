@@ -9,6 +9,8 @@ on:
   push:
     branches:
       - master
+    tags:
+      - stable
     paths-ignore:
       - "**/README.md"
       - "**/build-disk.yml"
@@ -97,6 +99,7 @@ jobs:
           tags: |
             type=raw,value=${{ env.DEFAULT_TAG }}
             type=raw,value={{date 'YYYYMMDD'}}
+            type=raw,value=stable,enable=${{ github.ref == 'refs/tags/stable' }}
             type=sha,enable=${{ github.event_name == 'pull_request' }}
             type=ref,event=pr
           labels: |
@@ -132,13 +135,13 @@ jobs:
       # Rechunk the built image (uses podman + root on ubuntu-24.04)
       - name: Get version info
         id: version_info
-        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        if: github.event_name != 'pull_request' && (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.ref == 'refs/tags/stable')
         run: |
           echo "sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
           echo "date=$(date +%Y%m%d)" >> $GITHUB_OUTPUT
 
       - name: Load rechunk action
-        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        if: github.event_name != 'pull_request' && (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.ref == 'refs/tags/stable')
         uses: actions/checkout@v6
         with:
           repository: hhd-dev/rechunk
@@ -147,7 +150,7 @@ jobs:
 
       - name: Rechunk image
         id: rechunk
-        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        if: github.event_name != 'pull_request' && (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.ref == 'refs/tags/stable')
         uses: ./.rechunk
         with:
           ref: localhost/${{ env.VARIANT_IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
@@ -157,14 +160,14 @@ jobs:
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3
-        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        if: github.event_name != 'pull_request' && (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.ref == 'refs/tags/stable')
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push rechunked image to GHCR
-        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        if: github.event_name != 'pull_request' && (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.ref == 'refs/tags/stable')
         id: push
         env:
           REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
@@ -188,10 +191,10 @@ jobs:
       # to consume. For more details, review the image signing section of the README.
       - name: Install Cosign
         uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
-        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        if: github.event_name != 'pull_request' && (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.ref == 'refs/tags/stable')
 
       - name: Sign container image
-        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        if: github.event_name != 'pull_request' && (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.ref == 'refs/tags/stable')
         run: |
           cosign sign -y --key env://COSIGN_PRIVATE_KEY ${{ steps.push.outputs.registry-path }}@${{ steps.push.outputs.digest }}
         env:
