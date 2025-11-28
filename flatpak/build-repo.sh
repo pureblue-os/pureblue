@@ -9,7 +9,7 @@ OUTPUT_IMAGE=${2:?required}
 # List of flatpak bundle URLs to install (one per line)
 # Format: "https://example.com/app.flatpak"
 FLATPAK_BUNDLES=(
-    "https://github.com/pureblue-os/purestore/releases/download/v0.5.11.pure.20251128.046b225/Store.flatpak"
+    "https://github.com/pureblue-os/purestore/releases/download/v0.5.11.pure.20251128.6e88eca/Store.flatpak"
 )
 
 # Convert array to space-separated string
