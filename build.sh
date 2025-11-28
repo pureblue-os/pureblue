@@ -27,6 +27,9 @@ podman build --build-arg BASE_IMAGE="$TEMP_IMAGE" -f Containerfile.extensions -t
 echo "==> Building tweaks layer"
 podman build --build-arg BASE_IMAGE="$TEMP_IMAGE" -f Containerfile.tweaks -t "$TEMP_IMAGE" .
 
+echo "==> Building services layer"
+podman build --build-arg BASE_IMAGE="$TEMP_IMAGE" -f Containerfile.services -t "$TEMP_IMAGE" .
+
 echo "==> Building final layer"
 podman build --build-arg BASE_IMAGE="$TEMP_IMAGE" -f Containerfile.final -t "$TEMP_IMAGE" .
 
