@@ -7,26 +7,23 @@ on:
   schedule:
     - cron: "05 11 * * *" # 11:05am UTC everyday
   push:
-    branches:
-      - master
     tags:
       - stable
+      - latest
     paths-ignore:
       - "**/README.md"
       - "**/build-disk.yml"
   workflow_dispatch:
 
 env:
-  IMAGE_DESC: "My Customized Universal Blue Image"
-  IMAGE_KEYWORDS: "bootc,ublue,universal-blue"
-  IMAGE_LOGO_URL: "https://avatars.githubusercontent.com/u/202331833"
+  IMAGE_DESC: "${{ github.event.repository.name }}"
   IMAGE_NAME: "${{ github.event.repository.name }}" # output image name, usually same as repo name
   IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}" # do not edit
   DEFAULT_TAG: "latest"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
-  cancel-in-progress: ${{ github.ref != 'refs/tags/stable' }}
+  cancel-in-progress: ${{ github.ref != 'refs/tags/stable' && github.ref != 'refs/tags/latest' }}
 
 jobs:
   build_push:
@@ -83,14 +80,9 @@ jobs:
       - name: Get current date
         id: date
         run: |
-          # This generates a timestamp like what is defined on the ArtifactHub documentation
-          # E.G: 2022-02-08T15:38:15Z'
-          # https://artifacthub.io/docs/topics/repositories/container-images/
-          # https://linux.die.net/man/1/date
+          # ISO 8601 timestamp for OCI image labels
           echo "date=$(date -u +%Y\-%m\-%d\T%H\:%M\:%S\Z)" >> $GITHUB_OUTPUT
 
-      # Image metadata for https://artifacthub.io/ - This is optional but is highly recommended so we all can get a index of all the custom images
-      # The metadata by itself is not going to do anything, you choose if you want your image to be on ArtifactHub or not.
       - name: Image Metadata
         uses: docker/metadata-action@318604b99e75e41977312d83839a89be02ca4893 # v5
         id: metadata
@@ -103,7 +95,6 @@ jobs:
             type=sha,enable=${{ github.event_name == 'pull_request' }}
             type=ref,event=pr
           labels: |
-            io.artifacthub.package.readme-url=https://raw.githubusercontent.com/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}/${{ github.sha }}/README.md
             org.opencontainers.image.created=${{ steps.date.outputs.date }}
             org.opencontainers.image.description=${{ env.IMAGE_DESC }} (${{ matrix.variant }})
             org.opencontainers.image.documentation=https://raw.githubusercontent.com/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}/${{ github.sha }}/README.md
@@ -112,11 +103,6 @@ jobs:
             org.opencontainers.image.url=https://github.com/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}/tree/${{ github.sha }}
             org.opencontainers.image.vendor=${{ github.repository_owner }}
             org.opencontainers.image.version=${{ env.DEFAULT_TAG }}.{{date 'YYYYMMDD'}}
-            io.artifacthub.package.deprecated=false
-            io.artifacthub.package.keywords=${{ env.IMAGE_KEYWORDS }}
-            io.artifacthub.package.license=Apache-2.0
-            io.artifacthub.package.logo-url=${{ env.IMAGE_LOGO_URL }}
-            io.artifacthub.package.prerelease=false
             containers.bootc=1
           sep-tags: " "
           sep-annotations: " "
@@ -135,13 +121,13 @@ jobs:
       # Rechunk the built image (uses podman + root on ubuntu-24.04)
       - name: Get version info
         id: version_info
-        if: github.event_name != 'pull_request' && (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.ref == 'refs/tags/stable')
+        if: github.event_name != 'pull_request'
         run: |
           echo "sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
           echo "date=$(date +%Y%m%d)" >> $GITHUB_OUTPUT
 
       - name: Load rechunk action
-        if: github.event_name != 'pull_request' && (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.ref == 'refs/tags/stable')
+        if: github.event_name != 'pull_request'
         uses: actions/checkout@v6
         with:
           repository: hhd-dev/rechunk
@@ -150,7 +136,7 @@ jobs:
 
       - name: Rechunk image
         id: rechunk
-        if: github.event_name != 'pull_request' && (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.ref == 'refs/tags/stable')
+        if: github.event_name != 'pull_request'
         uses: ./.rechunk
         with:
           ref: localhost/${{ env.VARIANT_IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
@@ -160,14 +146,14 @@ jobs:
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3
-        if: github.event_name != 'pull_request' && (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.ref == 'refs/tags/stable')
+        if: github.event_name != 'pull_request'
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push rechunked image to GHCR
-        if: github.event_name != 'pull_request' && (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.ref == 'refs/tags/stable')
+        if: github.event_name != 'pull_request'
         id: push
         env:
           REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
@@ -191,10 +177,10 @@ jobs:
       # to consume. For more details, review the image signing section of the README.
       - name: Install Cosign
         uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
-        if: github.event_name != 'pull_request' && (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.ref == 'refs/tags/stable')
+        if: github.event_name != 'pull_request'
 
       - name: Sign container image
-        if: github.event_name != 'pull_request' && (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.ref == 'refs/tags/stable')
+        if: github.event_name != 'pull_request'
         run: |
           cosign sign -y --key env://COSIGN_PRIVATE_KEY ${{ steps.push.outputs.registry-path }}@${{ steps.push.outputs.digest }}
         env:
