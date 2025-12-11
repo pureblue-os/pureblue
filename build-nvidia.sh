@@ -2,7 +2,6 @@
 
 set -euo pipefail
 
-BASE_IMAGE="ghcr.io/pureblue-os/gnome-nvidia:latest"
-IMAGE_ID="pureblue-nvidia"
+export BASE_IMAGE="ghcr.io/pureblue-os/gnome-nvidia:latest"
 
-bash "$(dirname "$0")/build.sh" "$BASE_IMAGE" "$IMAGE_ID"
+bash "$(dirname "$0")/build.sh"

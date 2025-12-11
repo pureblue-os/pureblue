@@ -3,7 +3,8 @@ FROM scratch AS ctx
 COPY build_files /
 FROM ${BASE_IMAGE}
 
-ARG IMAGE_ID
+ARG IMAGE_NAME
+ARG IMAGE_VERSION
 
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
-    IMAGE_ID=${IMAGE_ID} /ctx/os-release.sh
+    IMAGE_NAME=${IMAGE_NAME} IMAGE_VERSION=${IMAGE_VERSION} /ctx/os-release.sh

@@ -2,7 +2,6 @@
 
 set -euo pipefail
 
-BASE_IMAGE="ghcr.io/pureblue-os/gnome:latest"
-IMAGE_ID="pureblue"
+export BASE_IMAGE="ghcr.io/pureblue-os/gnome:latest"
 
-bash "$(dirname "$0")/build.sh" "$BASE_IMAGE" "$IMAGE_ID"
+bash "$(dirname "$0")/build.sh"

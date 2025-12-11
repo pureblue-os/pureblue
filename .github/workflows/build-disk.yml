@@ -34,14 +34,13 @@ jobs:
           USER_UID=$(id -u)
           USER_GID=$(id -g)
           echo "IMAGE_REGISTRY=${IMAGE_REGISTRY,,}" >> ${GITHUB_ENV}
-          echo "IMAGE_NAME=${IMAGE_NAME,,}" >> ${GITHUB_ENV}
           echo "USER_UID=${USER_UID}" >> ${GITHUB_ENV}
           echo "USER_GID=${USER_GID}" >> ${GITHUB_ENV}
-          # Set variant-specific image name
+          # Overwrite IMAGE_NAME with variant suffix
           if [[ "${{ matrix.variant }}" == "base" ]]; then
-            echo "VARIANT_IMAGE_NAME=${IMAGE_NAME,,}" >> ${GITHUB_ENV}
+            echo "IMAGE_NAME=${IMAGE_NAME,,}" >> ${GITHUB_ENV}
           else
-            echo "VARIANT_IMAGE_NAME=${IMAGE_NAME,,}-${{ matrix.variant }}" >> ${GITHUB_ENV}
+            echo "IMAGE_NAME=${IMAGE_NAME,,}-${{ matrix.variant }}" >> ${GITHUB_ENV}
           fi
 
       - name: Maximize build space
@@ -57,7 +56,7 @@ jobs:
         uses: osbuild/bootc-image-builder-action@main
         with:
           config-file: ./disk_config/iso.toml
-          image: ${{ env.IMAGE_REGISTRY }}/${{ env.VARIANT_IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
+          image: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
           chown: ${{ env.USER_UID }}:${{ env.USER_GID }}
           types: anaconda-iso
           additional-args: --use-librepo=True --rootfs btrfs

@@ -4,11 +4,13 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-BASE_IMAGE=${1:?required}
-IMAGE_ID=${2:?required}
-FINAL_IMAGE="localhost/${IMAGE_ID}:latest"
+# All variables come from environment
+BASE_IMAGE=${BASE_IMAGE:?required}
+IMAGE_NAME=${IMAGE_NAME:?required}
+IMAGE_VERSION=${IMAGE_VERSION:?required}
+FINAL_IMAGE="localhost/${IMAGE_NAME}:latest"
 
-echo "==> Building container from $BASE_IMAGE to $FINAL_IMAGE (IMAGE_ID: $IMAGE_ID)"
+echo "==> Building container from $BASE_IMAGE to $FINAL_IMAGE (IMAGE_NAME: $IMAGE_NAME, IMAGE_VERSION: $IMAGE_VERSION)"
 
 TEMP_IMAGE="localhost/pureblue:building-$$"
 
@@ -34,7 +36,7 @@ echo "==> Building final layer"
 podman build --build-arg BASE_IMAGE="$TEMP_IMAGE" -f Containerfile.final -t "$TEMP_IMAGE" .
 
 echo "==> Building brand layer"
-podman build --build-arg BASE_IMAGE="$TEMP_IMAGE" --build-arg IMAGE_ID="$IMAGE_ID" -f Containerfile.brand -t "$TEMP_IMAGE" .
+podman build --build-arg BASE_IMAGE="$TEMP_IMAGE" --build-arg IMAGE_NAME="$IMAGE_NAME" --build-arg IMAGE_VERSION="$IMAGE_VERSION" -f Containerfile.brand -t "$TEMP_IMAGE" .
 
 # Tag final image
 echo "==> Tagging as $FINAL_IMAGE"

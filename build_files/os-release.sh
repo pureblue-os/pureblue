@@ -2,41 +2,36 @@
 
 set -euo pipefail
 
-echo "==> Configuring Pureblue branding in os-release"
+echo "==> Configuring ostree-related fields in os-release"
 
-# Validate required environment variable
-IMAGE_ID=${IMAGE_ID:?required}
+OS_RELEASE_FILE="/usr/lib/os-release"
+
+# Validate required environment variables
+IMAGE_NAME=${IMAGE_NAME:?required}
+IMAGE_VERSION=${IMAGE_VERSION:?required}
 
 # Extract Fedora version from the base image
 FEDORA_VERSION=$(rpm -E %fedora)
 BUILD_DATE=$(date +%Y%m%d)
-SUPPORT_END=$(date -d "+13 months" +%Y-%m)
 
-cat > /usr/lib/os-release <<EOF
-NAME="Pureblue"
-VERSION="${FEDORA_VERSION} (Bootc)"
-RELEASE_TYPE=stable
-ID=fedora
-ID_LIKE="fedora"
-VERSION_ID=${FEDORA_VERSION}
-VERSION_CODENAME="Lily"
-PLATFORM_ID="platform:f${FEDORA_VERSION}"
-PRETTY_NAME="Pureblue ${FEDORA_VERSION}"
-ANSI_COLOR="0;38;2;60;110;180"
-LOGO=fedora-logo-icon
-CPE_NAME="cpe:/o:fedoraproject:fedora:${FEDORA_VERSION}"
-DEFAULT_HOSTNAME="pureblue"
-HOME_URL="https://github.com/pureblue-os"
-DOCUMENTATION_URL="https://github.com/pureblue-os/pureblue"
-SUPPORT_URL="https://github.com/pureblue-os/pureblue"
-BUG_REPORT_URL="https://github.com/pureblue-os/pureblue/issues"
-SUPPORT_END=${SUPPORT_END}
-VARIANT="Bootc"
-VARIANT_ID=bootc
-OSTREE_VERSION='${FEDORA_VERSION}.${BUILD_DATE}'
-BUILD_ID="${BUILD_DATE}"
-IMAGE_ID="${IMAGE_ID}"
-IMAGE_VERSION="${FEDORA_VERSION}.${BUILD_DATE}"
-EOF
+# Helper function to update or add a key in os-release
+set_os_release_value() {
+    local key="$1"
+    local value="$2"
+    
+    if grep -q "^${key}=" "$OS_RELEASE_FILE"; then
+        # Key exists, update it
+        sed -i "s|^${key}=.*|${key}=${value}|" "$OS_RELEASE_FILE"
+    else
+        # Key doesn't exist, append it
+        echo "${key}=${value}" >> "$OS_RELEASE_FILE"
+    fi
+}
 
-echo "==> os-release configured successfully"
+# Only update ostree-related values
+set_os_release_value "OSTREE_VERSION" "'${FEDORA_VERSION}.${BUILD_DATE}'"
+set_os_release_value "BUILD_ID" "\"${BUILD_DATE}\""
+set_os_release_value "IMAGE_ID" "\"${IMAGE_NAME}\""
+set_os_release_value "IMAGE_VERSION" "\"${IMAGE_VERSION}\""
+
+echo "==> os-release ostree fields configured successfully"

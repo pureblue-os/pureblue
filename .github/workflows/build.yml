@@ -16,6 +16,7 @@ env:
   IMAGE_DESC: "${{ github.event.repository.name }}"
   IMAGE_NAME: "${{ github.event.repository.name }}" # output image name, usually same as repo name
   IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}" # do not edit
+  IMAGE_VERSION: "sha-${{ github.sha }}"
   DEFAULT_TAG: "latest"
 
 concurrency:
@@ -43,14 +44,13 @@ jobs:
     steps:
       - name: Prepare environment
         run: |
-          # Lowercase the image uri
+          # Lowercase the image registry
           echo "IMAGE_REGISTRY=${IMAGE_REGISTRY,,}" >> ${GITHUB_ENV}
-          echo "IMAGE_NAME=${IMAGE_NAME,,}" >> ${GITHUB_ENV}
-          # Set variant-specific image name
+          # Overwrite IMAGE_NAME with variant suffix
           if [[ "${{ matrix.variant }}" == "base" ]]; then
-            echo "VARIANT_IMAGE_NAME=${IMAGE_NAME,,}" >> ${GITHUB_ENV}
+            echo "IMAGE_NAME=${IMAGE_NAME,,}" >> ${GITHUB_ENV}
           else
-            echo "VARIANT_IMAGE_NAME=${IMAGE_NAME,,}-${{ matrix.variant }}" >> ${GITHUB_ENV}
+            echo "IMAGE_NAME=${IMAGE_NAME,,}-${{ matrix.variant }}" >> ${GITHUB_ENV}
           fi
 
       - name: Checkout
@@ -74,12 +74,12 @@ jobs:
           labels: |
             org.opencontainers.image.created=${{ steps.iso8601.outputs.timestamp }}
             org.opencontainers.image.description=${{ env.IMAGE_DESC }} (${{ matrix.variant }})
-            org.opencontainers.image.documentation=https://raw.githubusercontent.com/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}/${{ github.sha }}/README.md
-            org.opencontainers.image.source=https://github.com/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}/blob/${{ github.sha }}/Containerfile.${{ matrix.variant }}
-            org.opencontainers.image.title=${{ env.VARIANT_IMAGE_NAME }}
-            org.opencontainers.image.url=https://github.com/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}/tree/${{ github.sha }}
+            org.opencontainers.image.documentation=https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/README.md
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.title=${{ env.IMAGE_NAME }}
+            org.opencontainers.image.url=https://github.com/${{ github.repository }}
             org.opencontainers.image.vendor=${{ github.repository_owner }}
-            org.opencontainers.image.version=${{ env.DEFAULT_TAG }}.{{date 'YYYYMMDD'}}
+            org.opencontainers.image.version=${{ env.IMAGE_VERSION }}
             containers.bootc=1
           sep-tags: " "
           sep-annotations: " "
@@ -97,13 +97,13 @@ jobs:
             echo "Manual run - will build and publish"
           else
             echo "should_publish=true" >> $GITHUB_OUTPUT
-            # Check if the sha tag is already present in the registry
-            if skopeo inspect docker://${{ env.IMAGE_REGISTRY }}/${{ env.VARIANT_IMAGE_NAME }}:sha-${{ github.sha }} >/dev/null 2>&1; then
+            # Check if the commit tag is already present in the registry
+            if skopeo inspect docker://${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }} >/dev/null 2>&1; then
               echo "should_build=false" >> $GITHUB_OUTPUT
-              echo "Image for commit ${{ github.sha }} already exists, will retag only"
+              echo "Image for ${{ env.IMAGE_VERSION }} already exists, will retag only"
             else
               echo "should_build=true" >> $GITHUB_OUTPUT
-              echo "Image for commit ${{ github.sha }} not found, will build and publish"
+              echo "Image for ${{ env.IMAGE_VERSION }} not found, will build and publish"
             fi
           fi
 
@@ -126,12 +126,7 @@ jobs:
         id: build_image
         if: steps.checks.outputs.should_build == 'true'
         run: |
-          sudo bash "build-${{ matrix.variant }}.sh" "${{ env.VARIANT_IMAGE_NAME }}:${{ env.DEFAULT_TAG }}"
-          # Extract Fedora version from the built image
-          FEDORA_VERSION=$(sudo podman run --rm ${{ env.VARIANT_IMAGE_NAME }}:${{ env.DEFAULT_TAG }} rpm -E %fedora)
-          echo "fedora_version=$FEDORA_VERSION" >> $GITHUB_OUTPUT
-          echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
-          echo "build_date=$(date +%Y%m%d)" >> $GITHUB_OUTPUT
+          sudo -E bash "build-${{ matrix.variant }}.sh"
 
       - name: Load rechunk action
         if: steps.checks.outputs.should_build == 'true' && steps.checks.outputs.should_publish == 'true' 
@@ -146,8 +141,8 @@ jobs:
         if: steps.checks.outputs.should_build == 'true' && steps.checks.outputs.should_publish == 'true' 
         uses: ./.rechunk
         with:
-          ref: localhost/${{ env.VARIANT_IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
-          version: "${{ steps.build_image.outputs.fedora_version }}.${{ steps.build_image.outputs.build_date }}.${{ steps.build_image.outputs.short_sha }}"
+          ref: localhost/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
+          version: ${{ env.IMAGE_VERSION }}
           revision: ${{ github.sha }}
 
       - name: Login to GitHub Container Registry
@@ -163,11 +158,11 @@ jobs:
         env:
           REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Push rechunked image with a temporary sha tag (untagged push not possible with skopeo)
+          # Push rechunked image with the commit tag
           sudo skopeo copy \
             --dest-creds=${{ github.actor }}:$REGISTRY_PASSWORD \
             ${{ steps.rechunk.outputs.ref }} \
-            docker://${{ env.IMAGE_REGISTRY }}/${{ env.VARIANT_IMAGE_NAME }}:sha-${{ github.sha }}
+            docker://${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
 
       - name: Add tags to pushed image
         if: steps.checks.outputs.should_publish == 'true'
@@ -175,7 +170,7 @@ jobs:
         env:
           REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          SOURCE="${{ env.IMAGE_REGISTRY }}/${{ env.VARIANT_IMAGE_NAME }}:sha-${{ github.sha }}"
+          SOURCE="${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}"
           echo "Tagging from $SOURCE"
 
           # Add all tags
@@ -185,12 +180,12 @@ jobs:
               --dest-creds=${{ github.actor }}:$REGISTRY_PASSWORD \
               --src-creds=${{ github.actor }}:$REGISTRY_PASSWORD \
               docker://$SOURCE \
-              docker://${{ env.IMAGE_REGISTRY }}/${{ env.VARIANT_IMAGE_NAME }}:$tag
+              docker://${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:$tag
           done
 
           DIGEST=$(skopeo inspect --creds=${{ github.actor }}:$REGISTRY_PASSWORD docker://$SOURCE --format '{{.Digest}}')
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
-          echo "registry-path=${{ env.IMAGE_REGISTRY }}/${{ env.VARIANT_IMAGE_NAME }}" >> $GITHUB_OUTPUT
+          echo "registry-path=${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}" >> $GITHUB_OUTPUT
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
