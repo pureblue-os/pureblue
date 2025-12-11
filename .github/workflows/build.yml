@@ -16,7 +16,6 @@ env:
   IMAGE_DESC: "${{ github.event.repository.name }}"
   IMAGE_NAME: "${{ github.event.repository.name }}" # output image name, usually same as repo name
   IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}" # do not edit
-  IMAGE_VERSION: "sha-${{ github.sha }}"
   DEFAULT_TAG: "latest"
 
 concurrency:
@@ -52,9 +51,13 @@ jobs:
           else
             echo "IMAGE_NAME=${IMAGE_NAME,,}-${{ matrix.variant }}" >> ${GITHUB_ENV}
           fi
+          # Set IMAGE_VERSION as date.short-sha
+          echo "IMAGE_VERSION=$(date +%Y%m%d).${GITHUB_SHA::7}" >> ${GITHUB_ENV}
 
       - name: Checkout
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v5
+        with:
+          ref: ${{ github.event_name == 'schedule' && 'latest' || github.ref }}
 
       - name: Get ISO 8601 timestamp for OCI image labels
         id: iso8601
@@ -143,7 +146,7 @@ jobs:
         with:
           ref: localhost/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
           version: ${{ env.IMAGE_VERSION }}
-          revision: ${{ github.sha }}
+          revision: ${{ env.IMAGE_VERSION }}
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3
