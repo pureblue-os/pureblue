@@ -30,10 +30,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant:
-          - base
-          - nvidia
-          - nvidia-open
+        include:
+          - variant: base
+            base_image: ghcr.io/pureblue-os/gnome:latest
+          - variant: nvidia
+            base_image: ghcr.io/pureblue-os/gnome-nvidia:latest
+          - variant: nvidia-open
+            base_image: ghcr.io/pureblue-os/gnome-nvidia-open:latest
 
     permissions:
       contents: read
@@ -51,8 +54,32 @@ jobs:
           else
             echo "IMAGE_NAME=${IMAGE_NAME,,}-${{ matrix.variant }}" >> ${GITHUB_ENV}
           fi
-          # Set IMAGE_VERSION as date.short-sha
-          echo "IMAGE_VERSION=$(date +%Y%m%d).${GITHUB_SHA::7}" >> ${GITHUB_ENV}
+          # Set BASE_IMAGE for build.sh
+          echo "BASE_IMAGE=${{ matrix.base_image }}" >> ${GITHUB_ENV}
+
+      - name: Get base image info
+        id: base_image
+        run: |
+          # Inspect the base image to get version info
+          BASE_INFO=$(skopeo inspect docker://${{ matrix.base_image }})
+          
+          # Get the digest (sha256:xxx) and extract short hash
+          BASE_DIGEST=$(echo "$BASE_INFO" | jq -r '.Digest' | cut -d: -f2)
+          BASE_SHA="${BASE_DIGEST::8}"
+          echo "base_sha=$BASE_SHA" >> $GITHUB_OUTPUT
+          
+          # Get Fedora version from labels
+          FEDORA_VERSION=$(echo "$BASE_INFO" | jq -r '.Labels["ostree.linux"] // .Labels["org.opencontainers.image.version"] // "unknown"' | cut -d. -f1)
+          # If we got a kernel version like "6.12.9-200.fc41.x86_64", extract fc version
+          if [[ "$FEDORA_VERSION" =~ \.fc([0-9]+)\. ]]; then
+            FEDORA_VERSION="${BASH_REMATCH[1]}"
+          fi
+          echo "fedora_version=$FEDORA_VERSION" >> $GITHUB_OUTPUT
+          
+          # Construct IMAGE_VERSION: fedora_version.base_sha.commit_sha
+          IMAGE_VERSION="${FEDORA_VERSION}.${BASE_SHA}.${GITHUB_SHA::8}"
+          echo "IMAGE_VERSION=$IMAGE_VERSION" >> ${GITHUB_ENV}
+          echo "Image version: $IMAGE_VERSION"
 
       - name: Checkout
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v5
@@ -70,7 +97,8 @@ jobs:
         with:
           tags: |
             type=raw,value=${{ env.DEFAULT_TAG }}
-            type=raw,value={{date 'YYYYMMDD'}}
+            type=raw,value=${{ steps.base_image.outputs.fedora_version }}
+            type=raw,value=${{ steps.base_image.outputs.fedora_version }}.${{ steps.base_image.outputs.base_sha }}
             type=raw,value=stable,enable=${{ github.ref == 'refs/tags/stable' }}
             type=sha,enable=${{ github.event_name == 'pull_request' }}
             type=ref,event=pr
@@ -129,7 +157,7 @@ jobs:
         id: build_image
         if: steps.checks.outputs.should_build == 'true'
         run: |
-          sudo -E bash "build-${{ matrix.variant }}.sh"
+          sudo -E bash build.sh
 
       - name: Load rechunk action
         if: steps.checks.outputs.should_build == 'true' && steps.checks.outputs.should_publish == 'true' 
