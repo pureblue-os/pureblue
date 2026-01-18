@@ -118,10 +118,6 @@ jobs:
             echo "should_build=true" >> $GITHUB_OUTPUT
             echo "should_publish=false" >> $GITHUB_OUTPUT
             echo "Pull request - will build but not publish"
-          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "should_build=true" >> $GITHUB_OUTPUT
-            echo "should_publish=true" >> $GITHUB_OUTPUT
-            echo "Manual run - will build and publish"
           else
             echo "should_publish=true" >> $GITHUB_OUTPUT
             # Check if the commit tag is already present in the registry
