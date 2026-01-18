@@ -68,12 +68,8 @@ jobs:
           BASE_SHA="${BASE_DIGEST::8}"
           echo "base_sha=$BASE_SHA" >> $GITHUB_OUTPUT
           
-          # Get Fedora version from labels
-          FEDORA_VERSION=$(echo "$BASE_INFO" | jq -r '.Labels["ostree.linux"] // .Labels["org.opencontainers.image.version"] // "unknown"' | cut -d. -f1)
-          # If we got a kernel version like "6.12.9-200.fc41.x86_64", extract fc version
-          if [[ "$FEDORA_VERSION" =~ \.fc([0-9]+)\. ]]; then
-            FEDORA_VERSION="${BASH_REMATCH[1]}"
-          fi
+          # Get Fedora version from org.opencontainers.image.version (e.g., "43.20260117.0" -> "43")
+          FEDORA_VERSION=$(echo "$BASE_INFO" | jq -r '.Labels["org.opencontainers.image.version"]' | cut -d. -f1)
           echo "fedora_version=$FEDORA_VERSION" >> $GITHUB_OUTPUT
           
           # Construct IMAGE_VERSION: fedora_version.base_sha.commit_sha
