@@ -257,8 +257,8 @@ If it’s user-facing or something you launch manually, it does **not** belong o
 
 **Rule of thumb:**
 
-> App → Flatpak
-> CLI tool → Homebrew
-> Dev -> Distrobox
-> Not available → Distrobox
-> System / hardware control → Package layering
+- App → Flatpak
+- CLI tool → Homebrew
+- Dev -> Distrobox
+- Not available → Distrobox
+- System / hardware control → Package layering
