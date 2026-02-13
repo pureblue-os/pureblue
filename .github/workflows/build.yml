@@ -24,12 +24,32 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  setup:
+    name: Setup build matrix
+    runs-on: ubuntu-24.04
+    outputs:
+      channels: ${{ steps.channels.outputs.channels }}
+    steps:
+      - name: Determine channels to build
+        id: channels
+        run: |
+          if [[ "${{ github.event_name }}" == "schedule" || "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo 'channels=["latest","stable"]' >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "push" ]]; then
+            echo 'channels=["${{ github.ref_name }}"]' >> $GITHUB_OUTPUT
+          else
+            echo 'channels=["latest"]' >> $GITHUB_OUTPUT
+          fi
+
   build_push:
-    name: Build and push image (${{ matrix.variant }})
+    name: Build and push image (${{ matrix.variant }}/${{ matrix.channel }})
+    needs: setup
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
+        variant: [base, nvidia, nvidia-open]
+        channel: ${{ fromJson(needs.setup.outputs.channels) }}
         include:
           - variant: base
             base_image: ghcr.io/pureblue-os/gnome:latest
@@ -71,16 +91,18 @@ jobs:
           # Get Fedora version from org.opencontainers.image.version (e.g., "43.20260117.0" -> "43")
           FEDORA_VERSION=$(echo "$BASE_INFO" | jq -r '.Labels["org.opencontainers.image.version"]' | cut -d. -f1)
           echo "fedora_version=$FEDORA_VERSION" >> $GITHUB_OUTPUT
-          
-          # Construct IMAGE_VERSION: fedora_version.base_sha.commit_sha
-          IMAGE_VERSION="${FEDORA_VERSION}.${BASE_SHA}.${GITHUB_SHA::8}"
-          echo "IMAGE_VERSION=$IMAGE_VERSION" >> ${GITHUB_ENV}
-          echo "Image version: $IMAGE_VERSION"
 
       - name: Checkout
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v5
         with:
-          ref: ${{ github.event_name == 'schedule' && 'latest' || github.ref }}
+          ref: ${{ github.event_name == 'pull_request' && github.ref || matrix.channel }}
+
+      - name: Set image version
+        run: |
+          COMMIT_SHA=$(git rev-parse HEAD)
+          IMAGE_VERSION="${{ steps.base_image.outputs.fedora_version }}.${{ steps.base_image.outputs.base_sha }}.${COMMIT_SHA::8}"
+          echo "IMAGE_VERSION=$IMAGE_VERSION" >> ${GITHUB_ENV}
+          echo "Image version: $IMAGE_VERSION (channel: ${{ matrix.channel }}, commit: ${COMMIT_SHA::8})"
 
       - name: Get ISO 8601 timestamp for OCI image labels
         id: iso8601
@@ -92,10 +114,10 @@ jobs:
         id: metadata
         with:
           tags: |
-            type=raw,value=${{ env.DEFAULT_TAG }}
-            type=raw,value=${{ steps.base_image.outputs.fedora_version }}
-            type=raw,value=${{ steps.base_image.outputs.fedora_version }}.${{ steps.base_image.outputs.base_sha }}
-            type=raw,value=stable,enable=${{ github.ref == 'refs/tags/stable' }}
+            type=raw,value=latest,enable=${{ matrix.channel == 'latest' }}
+            type=raw,value=${{ steps.base_image.outputs.fedora_version }},enable=${{ matrix.channel == 'latest' }}
+            type=raw,value=${{ steps.base_image.outputs.fedora_version }}.${{ steps.base_image.outputs.base_sha }},enable=${{ matrix.channel == 'latest' }}
+            type=raw,value=stable,enable=${{ matrix.channel == 'stable' }}
             type=sha,enable=${{ github.event_name == 'pull_request' }}
             type=ref,event=pr
           labels: |
