@@ -4,4 +4,5 @@ FROM ${BASE_IMAGE}
 # Enable automatic rpm-ostree updates
 RUN systemctl enable rpm-ostreed-automatic.timer
 RUN systemctl mask bootc-fetch-apply-updates.service
+RUN echo -e '[Daemon]\nAutomaticUpdatePolicy=stage' > /etc/rpm-ostreed.conf
 
