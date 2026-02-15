@@ -1,64 +1,119 @@
 # pureblue
 
-A **Fedora immutable bootc image for everyone**. It's close to vanilla **GNOME**
-desktop experince with sane defaults for normal everyday users.
+**A clean, immutable Fedora desktop for everyday users.**
 
-- Based on **Fedora Bootc**
-- **Immutable** image with atomic updates
-- Close to **vanilla GNOME** experience
-- Out-of-the-box setup so you can just start using your system
-- Supports **bootc swap** style workflows (switch between images / editions
-  without reinstalling)
+Pureblue is a Fedora bootc-based immutable image that stays close to vanilla GNOME while providing sane defaults and a 
+zero-friction setup. No tinkering required—just install and start working.
 
-## ISO Installation
+- **Immutable** atomic updates with instant rollbacks
+- **Vanilla GNOME** experience, no heavy customization
+- **Zero setup**—works out of the box
+- **Bootc-native**—swap between editions or images without reinstalling
 
-- Download the latest ISO from the
-  [releases page](https://github.com/pureblue-os/pureblue/releases)
+## Installation
 
-- Create a bootable USB using
-  [Fedora Media Writer](https://fedoraproject.org/en/workstation/download#fedora-media-writer).
+### Option 1: Fresh Install (ISO)
+1. Download the latest ISO from the [releases page](https://github.com/pureblue-os/pureblue/releases)
+2. Create a bootable USB with [Fedora Media Writer](https://fedoraproject.org/en/workstation/download#fedora-media-writer)
+3. Boot and install
 
-## Already have a fedora immutable system?
+### Option 2: Rebase from Fedora Immutable
+Already running Fedora Silverblue/Kinoite? Switch to Pureblue without losing your data.
 
-**Rebase to pureblue:**
-
+**Method A: rpm-ostree (Recommended)**
 ```bash
-rpm-ostree rebase ostree-unverified-registry:ghcr.io/pureblue-os/pureblue-nvidia-open:stable
+rpm-ostree rebase ostree-unverified-registry:ghcr.io/pureblue-os/pureblue:stable
 reboot
 ```
 
-**Switch to pureblue (bootc):**
-
-You can also use `bootc` to switch to pureblue:
+**Method B: bootc switch**
 ```bash
 sudo bootc switch ghcr.io/pureblue-os/pureblue:stable
 reboot
 ```
-> But since `bootc` doesn't support user layers you might need for your specific needs for your hardware.
-After the switch my recommendation is, use `rpm-ostree`. We also do auto-upgrades with `rpm-ostree` as well.
->
-> `rpm-ostree` also let's you see your user layers easily in a nice way using `rpm-ostree status`.
 
----
+> **Note:** While `bootc switch` works, `rpm-ostree` is recommended for most users because it supports user-layered 
+packages (needed for hardware drivers). Pureblue uses `rpm-ostree` for automatic upgrades and provides better visibility 
+of your system state via `rpm-ostree status`.
 
-**Update (rpm-ostree):**
+**Available variants:**
+- `ghcr.io/pureblue-os/pureblue` (AMD/Intel)
+- `ghcr.io/pureblue-os/pureblue-nvidia` (Proprietary drivers)
+- `ghcr.io/pureblue-os/pureblue-nvidia-open` (Open kernel module)
 
+**Keeping updated:**
 ```bash
 rpm-ostree upgrade
 reboot
 ```
 
-## Layering Asus ROG (without kernel modules)
+---
 
-Add the repo:
+## The Pureblue Workflow
 
+On an immutable system, the base OS stays pristine. Here's the recommended hierarchy for installing software—follow this 
+order to keep your system stable and manageable:
+
+### 1. Flatpak → Desktop Apps
+Install graphical apps from the app store (Steam, Chrome, LibreOffice). Flatpaks are sandboxed and won't touch your base 
+system.
+
+> **Exception:** IDEs (VS Code, JetBrains) work better in Distrobox, even when available as Flatpaks.
+
+### 2. Homebrew → CLI Tools
+Install command-line tools in user space:
 ```bash
-sudo dnf copr enable lukenukem/asus-linux
+brew install fastfetch ripgrep fd kubectl
 ```
+Perfect for developer utilities that don't need system integration.
 
-Layer packages:
+### 3. Distrobox → Development & Missing Apps
+When Flatpak or Homebrew don't have what you need, use Distrobox. Create containers (Ubuntu, Debian, etc.) that integrate 
+seamlessly with your desktop—GPU acceleration, audio, and apps appear in your launcher.
+
+**Best for:** Development environments, specialized tools, or apps not available elsewhere.
+
+### 4. Package Layering → System/Hardware Only
+**Never** layer user applications. Only use `rpm-ostree install` for:
+- Hardware control daemons (ASUS ROG tools, fan control)
+- System services (power-profiles-daemon, waydroid)
+- Kernel modules or deep OS integration
+
+---
+
+## Specific Use Cases
+
+### Development Workflow
+Keep the host minimal. Do all development inside Distrobox containers:
+
+1. **Install BoxBuddy** from the app store (GUI for managing Distrobox)
+2. **Create a dev container** with:
+   - **Init system enabled** (for better compatibility)
+   - **Separate home directory** (e.g., `~/Distrobox/dev`)
+3. Install your toolchains inside (Node, Python, Rust, etc.)
+4. Export apps to your host launcher when needed
+
+**Multiple containers recommended:** Separate boxes for web, mobile, or game development to avoid dependency conflicts.
+
+**Using Dev Containers?** If you need Podman inside a distrobox, create `~/.local/bin/podman`:
+```bash
+#!/bin/bash
+distrobox-host-exec podman "$@"
+```
+This reuses the host's Podman instead of nesting containers.
+
+### Running Windows Software
+Install **Bottles** from the app store for Wine-based Windows app support. Handles games, productivity software, and 
+modding tools without touching your base system.
+
+### ASUS ROG Hardware Support
+For ROG laptops (without kernel modules):
 
 ```bash
+# Add repository
+sudo dnf copr enable lukenukem/asus-linux
+
+# Layer control software
 sudo rpm-ostree override remove tuned-ppd \
   --install=asusctl \
   --install=asusctl-rog-gui \
@@ -67,197 +122,10 @@ sudo rpm-ostree override remove tuned-ppd \
 reboot
 ```
 
-## Guide
-
-### Using Distrobox (Highly Recommended)
-
-On an immutable (atomic) system, the base OS is designed to stay clean and stable.
-Instead of installing lots of software directly on the system, the recommended approach is to use **Distrobox**.
-
-**Distrobox** lets you create normal Linux environments (such as Ubuntu or Debian) that run in containers on top of your system. Inside these environments, you can install software the traditional way—without risking your host OS.
-
-Distrobox integrates very well with the system, including:
-
-* GPU acceleration (including NVIDIA)
-* Audio and networking
-* Desktop integration (apps appear in your launcher)
-
-For most users, it feels just like using a normal Linux system.
-
 ---
 
-### BoxBuddy (Recommended)
-
-**BoxBuddy** is a graphical tool that makes Distrobox easy to use and manage.
-It is the recommended way to create and manage distroboxes, especially for beginners.
-
-With BoxBuddy, you can:
-
-* Create and delete distroboxes easily
-* **Select a separate home folder during creation** (recommended)
-* **Enable the init system during creation** (recommended for better compatibility)
-* Install apps inside distroboxes
-* Export apps so they appear in your host’s app launcher
-
-Both **BoxBuddy** and **Bottles** are available from the **app store**.
-
-**Tip:**
-When creating a distrobox, it’s recommended to:
-
-* Enable **Init System**
-* Use a separate home directory, for example:
-
-  ```
-  ~/Distrobox/my-dev-pod
-  ```
-
----
-
-### Using Podman Inside Distrobox (Optional)
-
-If you use tools like **Dev Containers** or need Podman inside a distrobox, it’s best to reuse the **host’s Podman** instead of installing another one inside the container.
-
-To do this, create the following file **inside the distrobox**:
-
-**`~/.local/bin/podman`**
-
-```bash
-#!/bin/bash
-distrobox-host-exec podman "$@"
-```
-
-Then make it executable:
-
-```bash
-chmod +x ~/.local/bin/podman
-```
-
-If you’re not using containers for development yet, you can safely skip this step.
-
----
-
-### Doing Development on an Atomic OS
-
-For development work, the recommended workflow is simple:
-
-* Keep the host OS minimal and stable
-* Use **Distrobox** for development tools and SDKs
-
-Ubuntu-based images are commonly recommended since many tools officially support Ubuntu.
-
-Inside a distrobox, you can:
-
-* Install programming languages and SDKs
-* Use editors like VS Code or JetBrains IDEs
-* Install compilers, build tools, and dependencies
-
-You can also create **multiple distroboxes** for different purposes, such as:
-
-* Web development
-* Mobile app development
-* Game development
-
-This keeps everything organized and easy to remove later.
-
----
-
-### What If an App Doesn’t Have a Flatpak?
-
-That’s fine.
-
-If an app isn’t available as a Flatpak or isn’t easy to install on an immutable system:
-
-1. Install it inside a distrobox
-2. Export it using BoxBuddy or the Distrobox CLI
-
-Once exported, the app will show up in your normal app launcher and behave like a native app.
-
----
-
-### Running Windows Apps
-
-To run Windows apps or games, use **Bottles**.
-
-Bottles provides an easy-to-use interface for Wine and makes installing Windows software much simpler.
-Many apps and games work well, and with some tweaking, mods can also be installed.
-
-Bottles is available from the **app store**.
-
----
-
-### Final Tip
-
-On pureblue, there is a **recommended order** for installing software.
-Following this keeps your system clean, stable, and easy to update.
-
----
-
-#### 1. Flatpak — **Desktop apps**
-
-Use Flatpak for:
-
-* Graphical desktop applications (Steam, Brave, Chrome)
-* End-user tools from the app store
-
-Flatpaks are sandboxed and safe, and they do not modify the base system.
-
-> For IDEs (VSCode, JetBrains, etc), even if a Flatpak version exists, prefer Distrobox. IDEs work best in a full Linux environment where SDKs, toolchains, and container tools are not restricted.
-
----
-
-#### 2. Homebrew — **CLI tools**
-
-Use **Homebrew** for:
-
-* Command-line tools
-* Developer utilities
-* Tools that don’t need system integration
-
-Homebrew installs everything in user space and is ideal for tools like:
-
-* `fastfetch`
-* `deno` # To run typescript scripts.
-* `kubectl`
-* `terraform`
-* `ripgrep`, `fd`, etc.
-
-This is the preferred way to install CLI tools on pureblue.
-
----
-
-#### 3. Distrobox — **When Flatpak or Brew aren’t enough**
-
-Use Distrobox when:
-
-* An app is not available as a Flatpak
-* A CLI tool doesn’t exist in Homebrew
-* You need a full Linux environment (e.g. language runtimes, SDKs, package managers)
-
-If it doesn’t exist as a Flatpak **or** in Homebrew → use Distrobox.
-
-> For IDEs (VSCode, JetBrains, etc), even if a Flatpak version exists, prefer Distrobox. IDEs work best in a full Linux environment where SDKs, toolchains, and container tools are not restricted.
-
----
-
-#### 4. Package Layering — **System-level only**
-
-Package layering should **never** be used for apps.
-
-Only layer packages that must run on the host system, such as:
-
-* Hardware control tools (e.g. `asusctl`, ASUS ROG control center)
-* System services and daemons
-  (e.g. `power-profiles-daemon`, `waydroid`)
-* Software that requires deep OS or hardware integration
-
-If it’s user-facing or something you launch manually, it does **not** belong on the host.
-
----
-
-**Rule of thumb:**
-
+**Quick Reference:**
 - App → Flatpak
-- CLI tool → Homebrew
-- Dev -> Distrobox
-- Not available → Distrobox
-- System / hardware control → Package layering
+- CLI → Homebrew  
+- Dev environment → Distrobox
+- System/Hardware → `rpm-ostree install`
