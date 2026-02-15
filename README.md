@@ -20,12 +20,22 @@ desktop experince with sane defaults for normal everyday users.
 
 ## Already have a fedora immutable system?
 
-**Switch to pureblue:**
+**Rebase to pureblue:**
 
 ```bash
 rpm-ostree rebase ostree-unverified-registry:ghcr.io/pureblue-os/pureblue-nvidia-open:stable
 reboot
 ```
+
+**Switch to pureblue (bootc):**
+
+You can also use `bootc` to switch to pureblue:
+```bash
+sudo bootc switch ghcr.io/pureblue-os/pureblue:stable
+reboot
+```
+> But since `bootc` doesn't support user layers you might need for your specific needs for your hardware.
+After the switch my recommendation is, use `rpm-ostree`. We also do auto-upgrades with `rpm-ostree` as well.
 
 ---
 
