@@ -23,7 +23,7 @@ desktop experince with sane defaults for normal everyday users.
 **Switch to pureblue:**
 
 ```bash
-sudo bootc switch ghcr.io/pureblue-os/pureblue:stable
+rpm-ostree rebase ostree-unverified-registry:ghcr.io/pureblue-os/pureblue-nvidia-open:stable
 reboot
 ```
 
@@ -32,19 +32,7 @@ reboot
 **Update (rpm-ostree):**
 
 ```bash
-# Recommended if you are layering packages
-# (Also used for automated updates)
 rpm-ostree upgrade
-reboot
-```
-
----
-
-**Update (bootc):**
-
-```bash
-# Might not work if you have layered packages
-sudo bootc upgrade
 reboot
 ```
 
