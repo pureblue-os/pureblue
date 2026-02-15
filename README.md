@@ -36,6 +36,8 @@ reboot
 ```
 > But since `bootc` doesn't support user layers you might need for your specific needs for your hardware.
 After the switch my recommendation is, use `rpm-ostree`. We also do auto-upgrades with `rpm-ostree` as well.
+>
+> `rpm-ostree` also let's you see your user layers easily in a nice way using `rpm-ostree status`.
 
 ---
 
