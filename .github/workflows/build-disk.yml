@@ -125,15 +125,17 @@ jobs:
             Pureblue ISO release ${{ steps.tag.outputs.tag }}
 
             ## Downloads
-            Download ISOs from: ${{ secrets.S3_PUBLIC_URL }}/${{ steps.tag.outputs.tag }}/
-
-            ## Variants
-            - **pureblue-base.iso** - Base image (no NVIDIA drivers)
-            - **pureblue-nvidia.iso** - With proprietary NVIDIA drivers
-            - **pureblue-nvidia-open.iso** - With open-source NVIDIA drivers
+            - [pureblue-base.iso](${{ secrets.S3_PUBLIC_URL }}/${{ steps.tag.outputs.tag }}/pureblue-base.iso) - Base image (no NVIDIA drivers)
+            - [pureblue-nvidia.iso](${{ secrets.S3_PUBLIC_URL }}/${{ steps.tag.outputs.tag }}/pureblue-nvidia.iso) - With proprietary NVIDIA drivers
+            - [pureblue-nvidia-open.iso](${{ secrets.S3_PUBLIC_URL }}/${{ steps.tag.outputs.tag }}/pureblue-nvidia-open.iso) - With open-source NVIDIA drivers
 
             ## Verification
-            Verify your download with the SHA256SUMS file.
+            - [SHA256SUMS](${{ secrets.S3_PUBLIC_URL }}/${{ steps.tag.outputs.tag }}/SHA256SUMS)
+
+            Verify your download:
+            ```
+            sha256sum -c SHA256SUMS
+            ```
           files: |
             artifacts/SHA256SUMS
           draft: false
