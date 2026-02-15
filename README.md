@@ -53,8 +53,7 @@ reboot
 Add the repo:
 
 ```bash
-sudo wget -O /etc/yum.repos.d/_copr_lukenukem-asus-linux.repo \
-  "https://copr.fedorainfracloud.org/coprs/lukenukem/asus-linux/repo/fedora-$(rpm -E %fedora)/lukenukem-asus-linux-fedora-$(rpm -E %fedora).repo"
+sudo dnf copr enable lukenukem/asus-linux
 ```
 
 Layer packages:
