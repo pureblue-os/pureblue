@@ -1,5 +1,5 @@
 [Unit]
-Description=Install PureBlue System Flatpaks
+Description=Install Pureblue System Flatpaks
 After=network.target
 ConditionPathExists=/usr/share/flatpak/system-repo
 
