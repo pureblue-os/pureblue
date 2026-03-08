@@ -129,3 +129,7 @@ reboot
 - CLI → Homebrew  
 - Dev environment → Distrobox
 - System/Hardware → `rpm-ostree install`
+
+## License
+
+[Apache 2.0](LICENSE)
