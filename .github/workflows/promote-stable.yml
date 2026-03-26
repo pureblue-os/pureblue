@@ -16,7 +16,7 @@ concurrency:
   group: ${{ github.workflow }}-promote-stable
   cancel-in-progress: false
 
-  jobs:
+jobs:
   promote_stable:
     name: Promote ${{ matrix.variant }} to stable
     runs-on: ubuntu-24.04
