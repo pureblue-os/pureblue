@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to promote (e.g., 43.e2413e31.e5329e3b)'
+        description: "Version tag to promote (e.g., 43.commit-abc123)"
         required: true
         type: string
 
@@ -65,30 +65,18 @@ jobs:
           fi
           echo "Source image verified: $SOURCE"
 
-      - name: Parse version components
-        id: version
-        run: |
-          FULL_VERSION="${{ github.event.inputs.version }}"
-          # Extract version parts: 43.e2413e31.e5329e3b
-          FEDORA_VERSION=$(echo "$FULL_VERSION" | cut -d. -f1)
-          BASE_DIGEST=$(echo "$FULL_VERSION" | cut -d. -f2)
-          COMMIT_SHA=$(echo "$FULL_VERSION" | cut -d. -f3)
-          
-          echo "fedora_version=$FEDORA_VERSION" >> $GITHUB_OUTPUT
-          echo "base_digest=$BASE_DIGEST" >> $GITHUB_OUTPUT
-          echo "commit_sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
-
       - name: Tag as stable
         env:
           REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         run: |
           SOURCE="${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event.inputs.version }}"
-          FEDORA_VERSION="${{ steps.version.outputs.fedora_version }}"
-          BASE_DIGEST="${{ steps.version.outputs.base_digest }}"
-          
-          # Build list of tags
-          TAGS=("stable" "stable-${FEDORA_VERSION}" "stable-${FEDORA_VERSION}.${BASE_DIGEST}" "stable-${{ github.event.inputs.version }}")
-          
+
+          # Extract Fedora version from the tag (first part before first dot)
+          FEDORA_VERSION=$(echo "${{ github.event.inputs.version }}" | cut -d. -f1)
+
+          # Build list of tags: stable and stable-{version}
+          TAGS=("stable" "stable-${FEDORA_VERSION}")
+
           for tag in "${TAGS[@]}"; do
             echo "Promoting $SOURCE to $tag"
             skopeo copy \
@@ -97,7 +85,7 @@ jobs:
               docker://$SOURCE \
               docker://${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:$tag
           done
-          
+
           echo "Successfully tagged as: ${TAGS[*]}"
 
       - name: Install Cosign

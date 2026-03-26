@@ -99,7 +99,7 @@ jobs:
       - name: Set image version
         run: |
           COMMIT_SHA=$(git rev-parse HEAD)
-          IMAGE_VERSION="${{ steps.base_image.outputs.fedora_version }}.${{ steps.base_image.outputs.base_sha }}.${COMMIT_SHA::8}"
+          IMAGE_VERSION="${{ steps.base_image.outputs.fedora_version }}.commit-${COMMIT_SHA::8}.base-${{ steps.base_image.outputs.base_sha }}"
           echo "IMAGE_VERSION=$IMAGE_VERSION" >> ${GITHUB_ENV}
           echo "Image version: $IMAGE_VERSION (channel: ${{ matrix.channel }}, commit: ${COMMIT_SHA::8})"
 
@@ -115,7 +115,7 @@ jobs:
           tags: |
             type=raw,value=latest,enable=${{ matrix.channel == 'latest' }}
             type=raw,value=${{ steps.base_image.outputs.fedora_version }},enable=${{ matrix.channel == 'latest' }}
-            type=raw,value=${{ steps.base_image.outputs.fedora_version }}.${{ steps.base_image.outputs.base_sha }},enable=${{ matrix.channel == 'latest' }}
+            type=raw,value=${{ steps.base_image.outputs.fedora_version }}.commit-${COMMIT_SHA::8},enable=${{ matrix.channel == 'latest' }}
             type=sha,enable=${{ github.event_name == 'pull_request' }}
             type=ref,event=pr
           labels: |
