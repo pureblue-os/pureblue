@@ -8,7 +8,6 @@ on:
     - cron: "05 11 * * 0" # 11:05am UTC every Sunday (1 hour after base)
   push:
     tags:
-      - stable
       - latest
   workflow_dispatch:
 
@@ -34,7 +33,7 @@ jobs:
         id: channels
         run: |
           if [[ "${{ github.event_name }}" == "schedule" || "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo 'channels=["latest","stable"]' >> $GITHUB_OUTPUT
+            echo 'channels=["latest"]' >> $GITHUB_OUTPUT
           elif [[ "${{ github.event_name }}" == "push" ]]; then
             echo 'channels=["${{ github.ref_name }}"]' >> $GITHUB_OUTPUT
           else
@@ -45,6 +44,7 @@ jobs:
     name: Build and push image (${{ matrix.variant }}/${{ matrix.channel }})
     needs: setup
     runs-on: ubuntu-24.04
+    if: needs.setup.outputs.action == 'build-latest'
     strategy:
       fail-fast: false
       matrix:
@@ -115,7 +115,6 @@ jobs:
             type=raw,value=latest,enable=${{ matrix.channel == 'latest' }}
             type=raw,value=${{ steps.base_image.outputs.fedora_version }},enable=${{ matrix.channel == 'latest' }}
             type=raw,value=${{ steps.base_image.outputs.fedora_version }}.${{ steps.base_image.outputs.base_sha }},enable=${{ matrix.channel == 'latest' }}
-            type=raw,value=stable,enable=${{ matrix.channel == 'stable' }}
             type=sha,enable=${{ github.event_name == 'pull_request' }}
             type=ref,event=pr
           labels: |

@@ -1,0 +1,112 @@
+---
+name: Promote to Stable
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to promote (e.g., 43.e2413e31.e5329e3b)'
+        required: true
+        type: string
+
+env:
+  IMAGE_NAME: "${{ github.event.repository.name }}"
+  IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}"
+
+concurrency:
+  group: ${{ github.workflow }}-promote-stable
+  cancel-in-progress: false
+
+jobs:
+  promote_stable:
+    name: Promote ${{ matrix.variant }} to stable
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [base, nvidia-open]
+        include:
+          - variant: base
+            base_image: ghcr.io/pureblue-os/gnome:latest
+          - variant: nvidia-open
+            base_image: ghcr.io/pureblue-os/gnome-nvidia-open:latest
+
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Prepare environment
+        run: |
+          # Lowercase the image registry
+          echo "IMAGE_REGISTRY=${IMAGE_REGISTRY,,}" >> ${GITHUB_ENV}
+          # Overwrite IMAGE_NAME with variant suffix
+          if [[ "${{ matrix.variant }}" == "base" ]]; then
+            echo "IMAGE_NAME=${IMAGE_NAME,,}" >> ${GITHUB_ENV}
+          else
+            echo "IMAGE_NAME=${IMAGE_NAME,,}-${{ matrix.variant }}" >> ${GITHUB_ENV}
+          fi
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify source image exists
+        run: |
+          SOURCE="${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event.inputs.version }}"
+          if ! skopeo inspect docker://$SOURCE >/dev/null 2>&1; then
+            echo "Error: Source image $SOURCE does not exist!"
+            exit 1
+          fi
+          echo "Source image verified: $SOURCE"
+
+      - name: Parse version components
+        id: version
+        run: |
+          FULL_VERSION="${{ github.event.inputs.version }}"
+          # Extract version parts: 43.e2413e31.e5329e3b
+          FEDORA_VERSION=$(echo "$FULL_VERSION" | cut -d. -f1)
+          BASE_DIGEST=$(echo "$FULL_VERSION" | cut -d. -f2)
+          COMMIT_SHA=$(echo "$FULL_VERSION" | cut -d. -f3)
+          
+          echo "fedora_version=$FEDORA_VERSION" >> $GITHUB_OUTPUT
+          echo "base_digest=$BASE_DIGEST" >> $GITHUB_OUTPUT
+          echo "commit_sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
+
+      - name: Tag as stable
+        env:
+          REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          SOURCE="${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event.inputs.version }}"
+          FEDORA_VERSION="${{ steps.version.outputs.fedora_version }}"
+          BASE_DIGEST="${{ steps.version.outputs.base_digest }}"
+          
+          # Build list of tags
+          TAGS=("stable" "stable-${FEDORA_VERSION}" "stable-${FEDORA_VERSION}.${BASE_DIGEST}" "stable-${{ github.event.inputs.version }}")
+          
+          for tag in "${TAGS[@]}"; do
+            echo "Promoting $SOURCE to $tag"
+            skopeo copy \
+              --dest-creds=${{ github.actor }}:$REGISTRY_PASSWORD \
+              --src-creds=${{ github.actor }}:$REGISTRY_PASSWORD \
+              docker://$SOURCE \
+              docker://${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:$tag
+          done
+          
+          echo "Successfully tagged as: ${TAGS[*]}"
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
+
+      - name: Sign stable image
+        run: |
+          REGISTRY_PATH="${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}"
+          # Get digest of the stable tag
+          DIGEST=$(skopeo inspect --creds=${{ github.actor }}:${{ secrets.GITHUB_TOKEN }} docker://${REGISTRY_PATH}:stable --format '{{.Digest}}')
+          cosign sign -y --key env://COSIGN_PRIVATE_KEY ${REGISTRY_PATH}@${DIGEST}
+        env:
+          COSIGN_EXPERIMENTAL: false
+          COSIGN_PRIVATE_KEY: ${{ secrets.SIGNING_SECRET }}
