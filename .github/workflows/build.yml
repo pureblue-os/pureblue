@@ -115,7 +115,7 @@ jobs:
           tags: |
             type=raw,value=latest,enable=${{ matrix.channel == 'latest' }}
             type=raw,value=${{ steps.base_image.outputs.fedora_version }},enable=${{ matrix.channel == 'latest' }}
-            type=raw,value=${{ steps.base_image.outputs.fedora_version }}.commit-${COMMIT_SHA::8},enable=${{ matrix.channel == 'latest' }}
+            type=sha,format=short,prefix=${{ steps.base_image.outputs.fedora_version }}.commit-,enable=${{ matrix.channel == 'latest' }}
             type=sha,enable=${{ github.event_name == 'pull_request' }}
             type=ref,event=pr
           labels: |
