@@ -1,5 +1,5 @@
 ---
-name: Build container image
+name: Build Latest
 on:
   pull_request:
     branches:
@@ -80,12 +80,12 @@ jobs:
         run: |
           # Inspect the base image to get version info
           BASE_INFO=$(skopeo inspect docker://${{ matrix.base_image }})
-          
+
           # Get the digest (sha256:xxx) and extract short hash
           BASE_DIGEST=$(echo "$BASE_INFO" | jq -r '.Digest' | cut -d: -f2)
           BASE_SHA="${BASE_DIGEST::8}"
           echo "base_sha=$BASE_SHA" >> $GITHUB_OUTPUT
-          
+
           # Get Fedora version from org.opencontainers.image.version (e.g., "43.20260117.0" -> "43")
           FEDORA_VERSION=$(echo "$BASE_INFO" | jq -r '.Labels["org.opencontainers.image.version"]' | cut -d. -f1)
           echo "fedora_version=$FEDORA_VERSION" >> $GITHUB_OUTPUT
@@ -171,7 +171,7 @@ jobs:
           sudo -E bash build.sh
 
       - name: Load rechunk action
-        if: steps.checks.outputs.should_build == 'true' && steps.checks.outputs.should_publish == 'true' 
+        if: steps.checks.outputs.should_build == 'true' && steps.checks.outputs.should_publish == 'true'
         uses: actions/checkout@v6
         with:
           repository: hhd-dev/rechunk
@@ -180,7 +180,7 @@ jobs:
 
       - name: Rechunk image
         id: rechunk
-        if: steps.checks.outputs.should_build == 'true' && steps.checks.outputs.should_publish == 'true' 
+        if: steps.checks.outputs.should_build == 'true' && steps.checks.outputs.should_publish == 'true'
         uses: ./.rechunk
         with:
           ref: localhost/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
