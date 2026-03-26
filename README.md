@@ -38,7 +38,7 @@ of your system state via `rpm-ostree status`.
 
 **Available variants:**
 - `ghcr.io/pureblue-os/pureblue` (AMD/Intel)
-- `ghcr.io/pureblue-os/pureblue-nvidia` (Proprietary drivers)
+- ~~`ghcr.io/pureblue-os/pureblue-nvidia` (Proprietary drivers)~~ (Not supported anymore) 
 - `ghcr.io/pureblue-os/pureblue-nvidia-open` (Open kernel module)
 
 **Keeping updated:**
