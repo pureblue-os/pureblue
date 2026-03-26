@@ -16,17 +16,19 @@ concurrency:
   group: ${{ github.workflow }}-promote-stable
   cancel-in-progress: false
 
-jobs:
+  jobs:
   promote_stable:
     name: Promote ${{ matrix.variant }} to stable
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        variant: [base, nvidia-open]
+        variant: [base, nvidia, nvidia-open]
         include:
           - variant: base
             base_image: ghcr.io/pureblue-os/gnome:latest
+          - variant: nvidia
+            base_image: ghcr.io/pureblue-os/gnome-nvidia:latest
           - variant: nvidia-open
             base_image: ghcr.io/pureblue-os/gnome-nvidia-open:latest
 

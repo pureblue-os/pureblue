@@ -48,11 +48,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [base, nvidia-open]
+        variant: [base, nvidia, nvidia-open]
         channel: ${{ fromJson(needs.setup.outputs.channels) }}
         include:
           - variant: base
             base_image: ghcr.io/pureblue-os/gnome:latest
+          - variant: nvidia
+            base_image: ghcr.io/pureblue-os/gnome-nvidia:latest
           - variant: nvidia-open
             base_image: ghcr.io/pureblue-os/gnome-nvidia-open:latest
 
