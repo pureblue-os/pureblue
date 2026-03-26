@@ -44,7 +44,6 @@ jobs:
     name: Build and push image (${{ matrix.variant }}/${{ matrix.channel }})
     needs: setup
     runs-on: ubuntu-24.04
-    if: needs.setup.outputs.action == 'build-latest'
     strategy:
       fail-fast: false
       matrix:
