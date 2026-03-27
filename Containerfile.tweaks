@@ -3,3 +3,6 @@ FROM ${BASE_IMAGE}
 
 RUN rm -rf /usr/share/backgrounds/gnome/* && \
     find /usr/share/gnome-background-properties/ -name "gnome-*.xml" -delete
+
+# Increase file descriptor limits
+RUN sed -i 's|^[#]*DefaultLimitNOFILE=.*|DefaultLimitNOFILE=524288:1048576|' /usr/lib/systemd/system.conf
