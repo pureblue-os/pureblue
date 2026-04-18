@@ -4,6 +4,10 @@ FROM ${BASE_IMAGE}
 # Some images be a bad tenants and leave their trash behind.
 # So we clean up after them.
 
+# Remove PackageKit - broken on OSTree (service disabled but command-not-found still tries it)
+RUN dnf5 remove -y PackageKit || true && \
+    rm -f /etc/profile.d/PackageKit.sh || true
+
 # Remove ublue OS system-wide markers and configuration
 # This cleans up Universal Blue branding and configuration from the base image
 RUN set -x && \
