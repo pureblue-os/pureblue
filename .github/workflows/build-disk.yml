@@ -68,7 +68,7 @@ jobs:
           find . -name "*.iso" -exec mv {} pureblue-${{ matrix.variant }}.iso \;
 
       - name: Upload ISO artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: pureblue-${{ matrix.variant }}-iso
           path: ${{ steps.build.outputs.output-directory }}/pureblue-${{ matrix.variant }}.iso
