@@ -17,6 +17,6 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
         "legacyschemeautoswitcher@joshimukul29.gmail.com" \
         "do-not-disturb-while-screen-sharing-or-recording@marcinjahn.com" \
         "clipboard-indicator@tudmotu.com" \
-        "boostvolume@shaquib.dev" \
+#        "boostvolume@shaquib.dev" \
         "volume_scroller@francislavoie.github.io" \
         "unblank@sun.wxg@gmail.com"
