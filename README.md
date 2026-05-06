@@ -107,7 +107,7 @@ Install **Bottles** from the app store for Wine-based Windows app support. Handl
 modding tools without touching your base system.
 
 ### ASUS ROG Hardware Support
-For ROG laptops (without kernel modules):
+For ROG laptops:
 
 ```bash
 # Add repository
