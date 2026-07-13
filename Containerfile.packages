@@ -2,4 +2,4 @@ ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
 RUN dnf5 remove -y libreoffice*
-RUN dnf5 install -y tmux waydroid
+RUN dnf5 install -y tmux waydroid podman-compose
